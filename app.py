@@ -7,8 +7,7 @@ from flask import Flask, jsonify, request, render_template
 import tkinter.filedialog
 import pandas as pd
 app = Flask(__name__)
-@app.route('/', methods = ['GET', 'POST'])
-
+@app.route('/dea', methods = ['GET', 'POST'])
 def dea():
     if request.method == 'GET':
         print('Importe o Relátorio de Empenho e Destaques Analíticos')
