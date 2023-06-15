@@ -1,13 +1,10 @@
-'''Application Programming Interface (API) é uma ferramenta de conexão entre software, de maneira prática, é como o garçom de um restaurante, onde você faz um pedido (requisição), ele manda para a cozinha (serviço/programa conectado) e traz o seu prato pronto (resposta).
-Objetivo - Criar uma API que acesse o sistema SARCI, colete e mande os arquivos, informaçoes e anexos necessários para a geração do RCIG e retorne um arquivo preenchido e editavel
-URL base - local para onde será feita as requisiçoes. SARCI
-Endpoints - tipos de funcionalidades caminho/ rota a ser seguida para fazer uma requisição
-Recurso - Dea, contrato'''
-from flask import Flask, jsonify, request, render_template
+from SARCI import app
+from flask import request, jsonify, render_template
 import tkinter.filedialog
 import pandas as pd
-app = Flask(__name__)
-@app.route('/dea', methods = ['GET', 'POST'])
+
+
+@app.route('/', methods = ['GET', 'POST'])
 def dea():
     if request.method == 'GET':
         print('Importe o Relátorio de Empenho e Destaques Analíticos')
@@ -28,8 +25,3 @@ def dea():
         return despezas_de_execicios_anteriores.to_json(orient='columns')
     else:
         return jsonify({'message': 'Método POST não suportado'})
-
-    
-if __name__ == '__main__':
-    app.run()
-
