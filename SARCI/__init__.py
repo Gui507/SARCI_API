@@ -4,12 +4,12 @@ URL base - local para onde será feita as requisiçoes. SARCI
 Endpoints - tipos de funcionalidades caminho/ rota a ser seguida para fazer uma requisição
 Recurso - Dea, contrato'''
 from flask import Flask
-from flask_jwt_extended import create_access_token, JWTManager
-from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
+#from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storage.db'
-db = SQLAlchemy(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///storage.db'
+# db = SQLAlchemy(app)
 
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 jwt = JWTManager(app)

@@ -1,20 +1,38 @@
 from SARCI import app
-from flask import request, jsonify, render_template,create_access_token
+from flask import request, jsonify, render_template
+from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.utils import secure_filename
-import tkinter.filedialog
 import pandas as pd
 
+db =[
+    {
+       'id': '1', 
+       'user': 'soyEldvd', 
+       'username': 'Calixto', 
+       'password': '123'
+    }
+    ]
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.json.get('username', None)
-    password = request.json.get('password', None)
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    if username != db.username or  password != db.password:
-        return jsonify({'msg': "Senha ou usuario invalidos"}), 401
-    
-    token_de_acesso = create_access_token(identify=username)
-    return jsonify(access_token=token_de_acesso), 200
+    matching_user = next((user for user in db if user['username'] == username and user['password'] == password))
+
+    if matching_user:
+        access_token = create_access_token(identity=matching_user['id'])
+        return jsonify({'access_token': access_token})
+
+    return jsonify({'message': 'Invalid credentials'})
+
+@app.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    return jsonify({'message': 'Acess granted to protected resource'})
+
+
 
 
 @app.route('/', methods = ['POST'])
