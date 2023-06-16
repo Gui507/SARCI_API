@@ -3,13 +3,19 @@ from flask import request, jsonify, render_template
 from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.utils import secure_filename
 import pandas as pd
-
+from datetime import timedelta
 db =[
     {
        'id': '1', 
        'user': 'soyEldvd', 
        'username': 'Calixto', 
        'password': '123'
+    },
+    {
+       'id': '2', 
+       'user': 'Guilherme', 
+       'username': 'Gui507', 
+       'password': '12345'
     }
     ]
 
@@ -22,7 +28,7 @@ def login():
     matching_user = next((user for user in db if user['username'] == username and user['password'] == password))
 
     if matching_user:
-        access_token = create_access_token(identity=matching_user['id'])
+        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(seconds=30))
         return jsonify({'access_token': access_token})
 
     return jsonify({'message': 'Invalid credentials'})
