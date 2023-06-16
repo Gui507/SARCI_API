@@ -28,7 +28,7 @@ def login():
     matching_user = next((user for user in db if user['username'] == username and user['password'] == password))
 
     if matching_user:
-        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(seconds=30))
+        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=2))
         return jsonify({'access_token': access_token})
 
     return jsonify({'message': 'Invalid credentials'})
@@ -41,7 +41,8 @@ def protected():
 
 
 
-@app.route('/', methods = ['POST'])
+@app.route('/dea', methods = ['GET'])
+@jwt_required()
 def dea():
     if 'file' not in request.files:
         return 'Nenhum arquivo enviado', 400
@@ -57,6 +58,6 @@ def dea():
     valor_total = soma_dea + soma_sem_dea
     execucao_dea = round((soma_dea / valor_total) * 100, 2)
     despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
-    print(despezas_de_execicios_anteriores)
+    # print(despezas_de_execicios_anteriores)
     return despezas_de_execicios_anteriores.to_json(orient='columns')
 
