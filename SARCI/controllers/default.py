@@ -4,6 +4,37 @@ from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.utils import secure_filename
 import pandas as pd
 from datetime import timedelta
+import psycopg2
+
+def conectar_bd():
+    return psycopg2.connect(host="172.30.100.142", database="sarci", port=5432, user="postgres", password="Sarci23")
+
+def criar_tabela():
+    # Conecta ao banco de dados
+    conexao = conectar_bd()
+    # Cria um cursor para executar comandos SQL
+    cursor = conexao.cursor()
+    # Define o comando SQL para criar a tabela usuarios
+    sql = """CREATE TABLE usuarios (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) NOT NULL,,
+        senha VARCHAR(50) NOT NULL
+    )"""
+    # Executa o comando SQL
+    cursor.execute(sql)
+    # Salva as alterações no banco de dados
+    conexao.commit()
+    # Fecha o cursor e a conexão
+    cursor.close()
+    conexao.close()
+
+# Define uma rota para acessar a função criar_tabela
+@app.route("/criar_tabela", methods=['POST'])
+def index():
+    # Chama a função criar_tabela
+    criar_tabela()
+    # Retorna uma mensagem de sucesso
+    return "Tabela usuarios criada com sucesso!"
 db =[
     {
        'id': '1', 
@@ -15,7 +46,7 @@ db =[
        'id': '2', 
        'user': 'Guilherme', 
        'username': 'Gui507', 
-       'password': '12345'
+       'password': 'blablabla123'
     }
     ]
 
@@ -41,7 +72,7 @@ def protected():
 
 
 
-@app.route('/dea', methods = ['GET'])
+@app.route('/dea', methods = ['POST'])
 @jwt_required()
 def dea():
     if 'file' not in request.files:
