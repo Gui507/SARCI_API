@@ -5,11 +5,11 @@ Endpoints - tipos de funcionalidades caminho/ rota a ser seguida para fazer uma 
 Recurso - Dea, contrato'''
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy
+#from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://scott:tiger@172.100.142:5432/sarci'
-db = SQLAlchemy(app)
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://scott:tiger@172.100.142:5432/sarci'
+#db = SQLAlchemy(app)
 
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 jwt = JWTManager(app)
