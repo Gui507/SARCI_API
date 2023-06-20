@@ -9,60 +9,32 @@ import psycopg2
 def conectar_bd():
     return psycopg2.connect(host="172.30.100.142", database="sarci", port=5432, user="postgres", password="Sarci23")
 
-def criar_tabela():
-    # Conecta ao banco de dados
-    conexao = conectar_bd()
-    # Cria um cursor para executar comandos SQL
-    cursor = conexao.cursor()
-    # Define o comando SQL para criar a tabela usuarios
-    sql = """CREATE TABLE usuarios (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(50) NOT NULL,,
-        senha VARCHAR(50) NOT NULL
-    )"""
-    # Executa o comando SQL
-    cursor.execute(sql)
-    # Salva as alterações no banco de dados
-    conexao.commit()
-    # Fecha o cursor e a conexão
-    cursor.close()
-    conexao.close()
-
-# Define uma rota para acessar a função criar_tabela
-@app.route("/criar_tabela", methods=['POST'])
-def index():
-    # Chama a função criar_tabela
-    criar_tabela()
-    # Retorna uma mensagem de sucesso
-    return "Tabela usuarios criada com sucesso!"
-db =[
-    {
-       'id': '1', 
-       'user': 'soyEldvd', 
-       'username': 'Calixto', 
-       'password': '123'
-    },
-    {
-       'id': '2', 
-       'user': 'Guilherme', 
-       'username': 'Gui507', 
-       'password': 'blablabla123'
-    }
-    ]
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    
+    # concetar ao banco de dados
+    conexao = conectar_bd()
+    
+    # Cria um cursor para executar comandos SQL
+    cursor = conexao.cursor()
+    
+    # Executa o comando SQL
+    cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s',(username, password))
+    resultado = cursor.fetchone()
+    
+    # Fecha o cursor e a conexão
+    cursor.close()
+    conexao.close()
 
-    matching_user = next((user for user in db if user['username'] == username and user['password'] == password))
-
-    if matching_user:
-        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=2))
+    # Validação
+    if resultado is not None:
+        access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=2))
         return jsonify({'access_token': access_token})
-
-    return jsonify({'message': 'Invalid credentials'})
+    else:
+        return jsonify({'message': 'Invalid credentials'})
 
 @app.route('/protected', methods=['GET'])
 @jwt_required()
