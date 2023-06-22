@@ -1,7 +1,6 @@
 from SARCI.config import app
 from flask import request, jsonify, render_template
 from flask_jwt_extended import create_access_token, jwt_required
-from werkzeug.utils import secure_filename
 import pandas as pd
 from datetime import timedelta
 import psycopg2
