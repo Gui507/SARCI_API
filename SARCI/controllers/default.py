@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import timedelta
 import psycopg2
 
-'''# TESTE NA CGM (COM BANCO DE DADOS)
+# TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
     return psycopg2.connect(host="172.30.100.142", database="sarci", port=5432, user="postgres", password="Sarci23")
 
@@ -35,9 +35,9 @@ def login():
         return jsonify({'access_token': access_token})
     else:
         return jsonify({'message': 'Invalid credentials'})
-'''
 
-# TESTE EM CASA (SEM BANCO DE DADOS)
+
+'''# TESTE EM CASA (SEM BANCO DE DADOS)
 db =[
 {
     'id': '1', 
@@ -65,7 +65,7 @@ def login():
         return jsonify({'access_token': access_token})
     else:
         return jsonify({'message': 'Invalid credentials'})
-    
+    '''
 
 @app.route('/dea', methods = ['POST'])
 @jwt_required()
@@ -82,7 +82,7 @@ def dea():
         return 'O arquivo está vazio', 400
     
     # Verificar a extensão do arquivo
-    extensoes_permitidas = ['.xlsx', '.csv', '.xls']  # Exemplo de lista de extensões permitidas
+    extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
     extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
     if extensao_arquivo not in extensoes_permitidas:
         extensoes_permitidas_str = ', '.join(extensoes_permitidas)
