@@ -5,10 +5,12 @@ from werkzeug.utils import secure_filename
 import pandas as pd
 from datetime import timedelta
 import psycopg2
-
+import dotenv
+import os
+dotenv.load_dotenv()
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
-    return psycopg2.connect(host="172.30.100.142", database="sarci", port=5432, user="postgres", password="Sarci23")
+    return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
 
 @app.route('/login', methods=['POST'])
 def login():

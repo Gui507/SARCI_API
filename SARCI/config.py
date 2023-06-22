@@ -6,9 +6,11 @@ Recurso - Dea, contrato'''
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
-
+import dotenv
+import os
+dotenv.load_dotenv()
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://scott:tiger@172.100.142:5432/sarci'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 db = SQLAlchemy(app)
 
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
