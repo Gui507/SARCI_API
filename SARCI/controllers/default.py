@@ -6,6 +6,7 @@ from datetime import timedelta
 import psycopg2
 import dotenv
 import os
+
 dotenv.load_dotenv()
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
