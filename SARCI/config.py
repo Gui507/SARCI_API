@@ -5,13 +5,13 @@ Endpoints - tipos de funcionalidades caminho/ rota a ser seguida para fazer uma 
 Recurso - Dea, contrato'''
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy
-import dotenv
-import os
-dotenv.load_dotenv()
+# from flask_sqlalchemy import SQLAlchemy
+# import dotenv
+# import os
+#dotenv.load_dotenv()
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+#db = SQLAlchemy(app)
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
-db = SQLAlchemy(app)
 
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 jwt = JWTManager(app)

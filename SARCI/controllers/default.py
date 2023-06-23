@@ -3,11 +3,12 @@ from flask import request, jsonify, render_template
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
-import psycopg2
-import dotenv
-import os
+# import psycopg2
+# import dotenv
+# import os
 
-dotenv.load_dotenv()
+#dotenv.load_dotenv()
+'''
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
     return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
@@ -40,9 +41,9 @@ def login():
             return jsonify({'access_token': access_token})
         else:
             return jsonify({'message': 'Invalid credentials'})
+'''
 
-
-'''# TESTE EM CASA (SEM BANCO DE DADOS)
+# TESTE EM CASA (SEM BANCO DE DADOS)
 db =[
 {
     'id': '1', 
@@ -57,20 +58,25 @@ db =[
     'password': '12345'
 }
 ]
-
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    matching_user = next((user for user in db if user['username'] == username and user['password'] == password))
-
-    if matching_user:
-        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=20))
-        return jsonify({'access_token': access_token})
+    if request.method == 'POST':
+        data = request.get_json()
     else:
-        return jsonify({'message': 'Invalid credentials'})
-    '''
+        data = request.args
+        username = data.get('username')
+        password = data.get('password')
+        matching_user = None
+        for user in db:
+            if user['username'] == username and user['password'] == password:
+                matching_user = user
+                break
+
+        if matching_user:
+            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=20))
+            return jsonify({'access_token': access_token})
+        else:
+            return jsonify({'message': 'Invalid credentials'})
 
 @app.route('/dea', methods = ['POST'])
 @jwt_required()
