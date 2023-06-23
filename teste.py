@@ -6,15 +6,17 @@ app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
+
+
 class CriaUser(Resource):
-    def post(self):
+    def get(self):
         return jsonify({
             'status': 'SHOW!!','message': 'DEU TUDO CERTO PORRA'
         })
 
-api.add_resource(CriaUser, '/CreateUser')
+api.add_resource(CriaUser, '/CriaUser', methods=['GET'])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='localhost', port=8000, debug=True)
 
 
