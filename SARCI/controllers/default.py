@@ -36,7 +36,7 @@ def login():
 
         # Validação
         if resultado is not None:
-            access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=2))
+            access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=20))
             return jsonify({'access_token': access_token})
         else:
             return jsonify({'message': 'Invalid credentials'})
