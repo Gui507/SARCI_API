@@ -7,7 +7,7 @@ from datetime import timedelta
 # import dotenv
 # import os
 
-#dotenv.load_dotenv()
+# dotenv.load_dotenv()
 '''
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
@@ -58,6 +58,8 @@ db =[
     'password': '12345'
 }
 ]
+
+
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -77,6 +79,7 @@ def login():
             return jsonify({'access_token': access_token})
         else:
             return jsonify({'message': 'Invalid credentials'})
+
 
 @app.route('/dea', methods = ['POST'])
 @jwt_required()
@@ -120,4 +123,39 @@ def dea():
             execucao_dea = round((soma_dea / valor_total) * 100, 2)
             despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
             return despezas_de_execicios_anteriores.to_json(orient='columns')
-        
+
+@app.route('/despesas', methods = ['POST'])
+@jwt_required()
+def despesas():
+    if 'file' not in request.files:
+        return 'Nenhum arquivo enviado', 400
+    
+    arquivo = request.files['file']
+
+    if arquivo.filename == '':
+        return 'O arquivo está vazio', 400
+    
+    extensoes_permitidas = ['xlsx', 'csv', 'xls']
+    extensoes_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+    if extensoes_arquivo not in extensoes_permitidas:
+        extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+        return f'Formato de arquivo invalido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+    
+    if extensoes_arquivo == 'xlsx' or 'xls':
+        P4 = pd.read_excel(arquivo, header=1)
+    elif extensoes_arquivo == 'csv':
+        P4 = pd.read_csv(arquivo, header=1)
+
+    colunas_arquivo = P4.columns.tolist()
+    colunas_obrigatorias = ['Descrição Programa', 'Programa', 'Emp. No Mês', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
+
+    for coluna in colunas_obrigatorias:
+        if coluna not in colunas_arquivo:
+            return f'Arquivo errado, por favor importar o relatorio de despesas', 400
+        else:
+            TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
+            TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês'] / TabDespesadf['Sd Dot.Atual']) * 100, 2)
+            TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
+            # TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
+            # TabDespesadf.to_excel('Despesas-CGM.xlsx')
+            return TabDespesadf.to_json(orient='columns')
