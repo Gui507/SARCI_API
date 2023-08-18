@@ -101,6 +101,7 @@ def dea():
     if extensao_arquivo not in extensoes_permitidas:
         extensoes_permitidas_str = ', '.join(extensoes_permitidas)
         return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+    
 
     # leitura do arquivo
     if extensao_arquivo == 'xlsx' or 'xls': 
@@ -123,10 +124,12 @@ def dea():
             execucao_dea = round((soma_dea / valor_total) * 100, 2)
             despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
             return despezas_de_execicios_anteriores.to_json(orient='columns')
-        
+
+            
 @app.route('/', methods = ['GET'])
 def print():
     return 'TESTE'
+
 
 @app.route('/despesas', methods = ['POST'])
 @jwt_required()
