@@ -123,32 +123,21 @@ def dea():
             execucao_dea = round((soma_dea / valor_total) * 100, 2)
             despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
             return despezas_de_execicios_anteriores.to_json(orient='columns')
-<<<<<<< HEAD:SARCI/controllers/default.py
-=======
         
 @app.route('/', methods = ['GET'])
 def print():
     return 'TESTE'
->>>>>>> dc58bc1 (feat: comitizao gigante de atualização.):Sarci/controllers/default.py
 
 @app.route('/despesas', methods = ['POST'])
 @jwt_required()
 def despesas():
-<<<<<<< HEAD:SARCI/controllers/default.py
     if 'file' not in request.files:
         return 'Nenhum arquivo enviado', 400
     
-=======
-    
-    if 'file' not in request.files:
-        return 'Nenhum arquivo enviado', 400
-
->>>>>>> dc58bc1 (feat: comitizao gigante de atualização.):Sarci/controllers/default.py
     arquivo = request.files['file']
 
     if arquivo.filename == '':
         return 'O arquivo está vazio', 400
-<<<<<<< HEAD:SARCI/controllers/default.py
     
     extensoes_permitidas = ['xlsx', 'csv', 'xls']
     extensoes_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
@@ -174,30 +163,3 @@ def despesas():
             # TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
             # TabDespesadf.to_excel('Despesas-CGM.xlsx')
             return TabDespesadf.to_json(orient='columns')
-=======
-
-    extensoes_permitidas = ['xlsx', 'csv', 'xls']
-    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-    if extensao_arquivo not in extensoes_permitidas:
-        extensao_permitidas_str = ', '.join(extensoes_permitidas)
-        return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensao_permitidas_str}', 400
-
-
-    if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls':
-        P4 = pd.read_excel(arquivo, header=1)
-    elif extensao_arquivo == 'csv':
-        P4 = pd.read_csv(arquivo, header=1)
-
-    coluna_arquivo = P4. columns.tolist()
-    colunas_obrigatorias = ['Descrição do Programa', 'Sd Dot. Atual']
-    
-
-    for coluna in colunas_obrigatorias:
-        if coluna not in coluna_arquivo:
-            return f'Arquivo incorreto. Por favor importar o relatorio de despesas', 400
-    
-    TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
-    TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês'] / TabDespesadf['Sd Dot.Atual']) * 100, 2)
-    TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
-    return TabDespesadf.to_json(orient='columns')
->>>>>>> dc58bc1 (feat: comitizao gigante de atualização.):Sarci/controllers/default.py
