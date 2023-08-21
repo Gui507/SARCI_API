@@ -104,10 +104,13 @@ def dea():
     
 
     # leitura do arquivo
-    if extensao_arquivo == 'xlsx' or 'xls': 
-        P1 = pd.read_excel(arquivo, header=3)
-    elif extensao_arquivo == 'csv':
-        P1 = pd.read_csv(arquivo, header=3)
+    if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls' or extensao_arquivo == 'csv': 
+        try:
+            P1 = pd.read_excel(arquivo, header=3)
+        except Exception:
+            return f"Arquivo errado, por favor importe o relaório de empenho e destaques analiticos", 400
+
+    
 
     # Verifica se as colunas existem no arquivo
     colunas_arquivo = P1.columns.tolist()
