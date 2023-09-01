@@ -1,5 +1,5 @@
 from Sarci.config import app
-from flask import request, jsonify, render_template
+from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
@@ -60,6 +60,11 @@ db =[
 ]
 
 
+@app.route('/', methods = ['GET'])
+def print():
+    return 'TESTE'
+
+
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -107,8 +112,8 @@ def dea():
     if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls' or extensao_arquivo == 'csv': 
         try:
             P1 = pd.read_excel(arquivo, header=3)
-        except Exception:
-            return f"Arquivo errado, por favor importe o relaório de empenho e destaques analiticos", 400
+        except Exception as e:
+            return f"Erro na leitura do arquivo {e}", 400
 
     
 
@@ -128,36 +133,37 @@ def dea():
             despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
             return despezas_de_execicios_anteriores.to_json(orient='columns')
 
-            
-@app.route('/', methods = ['GET'])
-def print():
-    return 'TESTE'
-
-
 @app.route('/despesas', methods = ['POST'])
 @jwt_required()
 def despesas():
+    # Verificar se o arquivo foi enviado
     if 'file' not in request.files:
         return 'Nenhum arquivo enviado', 400
-    
+
+    # Obter o arquivo enviado
     arquivo = request.files['file']
 
+    # Verificar se o arquivo está vazio
     if arquivo.filename == '':
         return 'O arquivo está vazio', 400
     
-    extensoes_permitidas = ['xlsx', 'csv', 'xls']
-    extensoes_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-    if extensoes_arquivo not in extensoes_permitidas:
+    # Verificar a extensão do arquivo
+    extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
+    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+    if extensao_arquivo not in extensoes_permitidas:
         extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-        return f'Formato de arquivo invalido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+        return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
     
-    if extensoes_arquivo == 'xlsx' or 'xls':
-        P4 = pd.read_excel(arquivo, header=1)
-    elif extensoes_arquivo == 'csv':
-        P4 = pd.read_csv(arquivo, header=1)
+
+    # leitura do arquivo
+    if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls' or extensao_arquivo == 'csv': 
+        try:
+            P4 = pd.read_excel(arquivo, header=1)
+        except Exception as e:
+            return f"Erro na leitura do arquivo {e}", 400
 
     colunas_arquivo = P4.columns.tolist()
-    colunas_obrigatorias = ['Descrição Programa', 'Programa', 'Emp. No Mês', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
+    colunas_obrigatorias = ['Descrição do Programa', 'Progr.', 'Emp. No Mês', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
 
     for coluna in colunas_obrigatorias:
         if coluna not in colunas_arquivo:
@@ -169,3 +175,60 @@ def despesas():
             # TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
             # TabDespesadf.to_excel('Despesas-CGM.xlsx')
             return TabDespesadf.to_json(orient='columns')
+        
+
+@app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
+@jwt_required()
+def total_manifest():
+    # Verificar se o arquivo foi enviado
+    if 'file' not in request.files:
+        return 'Nenhum arquivo enviado', 400
+
+    # Obter o arquivo enviado
+    arquivo = request.files['file']
+
+    # Verificar se o arquivo está vazio
+    if arquivo.filename == '':
+        return 'O arquivo está vazio', 400
+
+    # Verificar a extensão do arquivo
+    extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
+    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+    if extensao_arquivo not in extensoes_permitidas:
+        extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+        return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+
+    # Leitura do arquivo
+    if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+        try:
+            rmanifest = pd.read_excel(arquivo)
+        except Exception as e:
+            return f"Erro na leitura do arquivo {e}", 400
+
+        colunas_arquivo = rmanifest.columns.tolist()
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO']
+
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return f'Arquivo errado, por favor importar o relatório de manifestações', 400
+
+        # Obter o órgão especificado pelo usuário, se fornecido
+        orgao_desejado = request.form.get('orgao')
+
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
+
+            # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
+            manifestacoes_orgao = rmanifest[rmanifest['ÓRGÃO'].str.upper() == orgao_desejado]
+
+            # Calcular o total de manifestações para o órgão especificado
+            total_manifestacoes = len(manifestacoes_orgao)
+
+            return f'Total de manifestações para o órgão {orgao_desejado}: {total_manifestacoes}', 200
+        else:
+            # Se o órgão não foi especificado, calcular o total de manifestações para todos os órgãos
+            total_manifestacoes = rmanifest.groupby(['ÓRGÃO']).size()
+
+            return f'Total de manifestações de todos os órgãos: {total_manifestacoes}', 200
+
+    return 'Formato de arquivo inválido', 400
