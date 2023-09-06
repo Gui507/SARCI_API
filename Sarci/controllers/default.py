@@ -417,3 +417,76 @@ def tempo_medio():
                 return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/ouvidoria/ranking-assunto', methods=['POST'])
+@jwt_required()
+def ranking():
+    try:
+        # Verificar se o arquivo foi enviado
+        if 'file' not in request.files:
+            return jsonify({"error": "Nenhum arquivo enviado"}), 400
+
+        # Obter o arquivo enviado
+        arquivo = request.files['file']
+
+        # Verificar se o arquivo está vazio
+        if arquivo.filename == '':
+            return jsonify({"error": "O arquivo está vazio"}), 400
+
+        # Verificar a extensão do arquivo
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+        if extensao_arquivo not in extensoes_permitidas:
+            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+            return jsonify({"error": f"Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}"}), 400
+
+        # Leitura do arquivo e contagem dos assuntos
+        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+            try:
+                rmanifest = pd.read_excel(arquivo)
+            except Exception as e:
+                return jsonify({"error": f"Erro na leitura do arquivo: {str(e)}"}), 400
+
+            colunas_arquivo = rmanifest.columns.tolist()
+            colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'DATA DE RESPOSTA', 'ASSUNTO']
+            for coluna in colunas_obrigatorias:
+                if coluna not in colunas_arquivo:
+                    return jsonify({"error": "Arquivo errado, por favor importar o relatório de manifestações"}), 400
+
+            try:
+                # Remover protocolos duplicados
+                rmanifest.drop_duplicates(subset=['PROTOCOLO'], inplace=True)
+
+                # Obter o órgão especificado pelo usuário, se fornecido
+                orgao_desejado = request.form.get('orgao')
+                if orgao_desejado:
+                    orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
+                    ranking = rmanifest['ASSUNTO'].value_counts().reset_index()
+                    ranking = ranking.rename(columns={'index': 'Assunto', 'ASSUNTO': 'Quantidade'})
+                    ranking_uo = ranking.loc[ranking['ÓRGÃO'] == orgao_desejado]
+                    ranking_uo = ranking_uo.drop(columns=['ÓRGÃO'])
+
+                    # Ordenar o ranking por quantidade em ordem decrescente
+                    ranking_uo = ranking_uo.sort_values(by='Quantidade', ascending=False)
+
+                    # Converter o DataFrame em uma lista de dicionários
+                    result = ranking_uo.to_dict(orient='records')
+
+                    return jsonify(result), 200
+                else:
+                    # Se o órgão não foi especificado, calcular o total de manifestações por tipo para todos os órgãos
+                    ranking = rmanifest['ASSUNTO'].value_counts().reset_index()
+                    ranking = ranking.rename(columns={'index': 'Assunto', 'ASSUNTO': 'Demanda'})
+
+                    # Ordenar o ranking por quantidade em ordem decrescente
+                    ranking = ranking.sort_values(by='Demanda', ascending=False)
+
+                    # Converter o DataFrame em uma lista de dicionários
+                    result = ranking.to_dict(orient='records')
+
+                    return jsonify(result), 200
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
