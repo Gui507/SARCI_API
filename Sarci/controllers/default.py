@@ -3,6 +3,7 @@ from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
+ 
 # import psycopg2
 # import dotenv
 # import os
@@ -490,3 +491,68 @@ def ranking():
                 return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/transparencia/pedidos', methods=['POST'])
+@jwt_required()
+def pedidos():
+    try:
+        # Verificar se o arquivo foi enviado
+        if 'file' not in request.files:
+            return 'Nenhum arquivo enviado', 400
+
+        # Obter o arquivo enviado
+        arquivo = request.files['file']
+
+        # Verificar se o arquivo está vazio
+        if arquivo.filename == '':
+            return 'O arquivo está vazio', 400
+
+        # Verificar a extensão do arquivo
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
+        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+        if extensao_arquivo not in extensoes_permitidas:
+            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+            return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+
+        # Leitura do arquivo
+        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+            try:
+                rpedidos = pd.read_excel(arquivo, header=4)
+            except Exception as e:
+                return f"Erro na leitura do arquivo {e}", 400
+
+            colunas_arquivo = rpedidos.columns.tolist()
+            colunas_obrigatorias = ['ÓRGÃOS','Nº de Pedidos','Nº de pedidos dentro do prazo (20 dias)','Nº de pedidos fora do prazo (> 20 dias)','Tempo Médio de Resposta do Pedido ','Recurso de 1ª Instância','Recurso de 2ª Instância','Recurso de 3ª Instância',]
+
+            for coluna in colunas_obrigatorias:
+                if coluna not in colunas_arquivo:
+                    return f'Arquivo errado, por favor importar o relatório de pedidos', 400
+
+            # Obter o órgão especificado pelo usuário, se fornecido
+            orgao_desejado = request.form.get('orgao')
+
+            if orgao_desejado:
+                orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
+
+                # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
+                manifestacoes_orgao = rpedidos[rpedidos['ÓRGÃOS'].str.upper() == orgao_desejado]
+
+                # Calcular o total de manifestações para o órgão especificado
+                total_manifestacoes = len(manifestacoes_orgao)
+
+                return f'Total de pedidos para o órgão {orgao_desejado}: {total_manifestacoes}', 200
+            else:
+                # Se o órgão não foi especificado, calcular o total de manifestações para todos os órgãos
+                total_manifestacoes = rpedidos.groupby(['ÓRGÃOS']).size()
+
+                return f'Total de pedidos de todos os órgãos: {total_manifestacoes}', 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Incluir o código da função pedidos aqui
+    df_base = pd.read_excel(arquivo, header=4)
+    df_final = df_base[['Nº de Pedidos', 'Nº de pedidos dentro do prazo (20 dias)', 'Nº de pedidos fora do prazo (> 20 dias)', 'Tempo Médio de Resposta do Pedido', 'Recurso de 1ª Instância', 'Recurso de 2ª Instância', 'Recurso de 3ª Instância']]
+    #df_final.to_excel(f'{dir(arquivo)}Resultados Transparencia - {orgao_desejado}.xlsx',index=False)
+    df_final.to_excel('Resultados Transparencia-CGM.xlsx')
+    return df_final
