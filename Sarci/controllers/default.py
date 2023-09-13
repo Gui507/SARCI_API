@@ -3,7 +3,7 @@ from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
- 
+from Sarci.controllers import contratos
 # import psycopg2
 # import dotenv
 # import os
@@ -87,53 +87,57 @@ def login():
             return jsonify({'message': 'Invalid credentials'})
 
 
-@app.route('/dea', methods = ['POST'])
+@app.route('/dea', methods=['POST'])
 @jwt_required()
 def dea():
-    # Verificar se o arquivo foi enviado
-    if 'file' not in request.files:
-        return 'Nenhum arquivo enviado', 400
+    try:
+        # Verificar se o arquivo foi enviado
+        if 'file' not in request.files:
+            return 'Nenhum arquivo enviado', 400
 
-    # Obter o arquivo enviado
-    arquivo = request.files['file']
+        # Obter o arquivo enviado
+        arquivo = request.files['file']
 
-    # Verificar se o arquivo está vazio
-    if arquivo.filename == '':
-        return 'O arquivo está vazio', 400
-    
-    # Verificar a extensão do arquivo
-    extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
-    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-    if extensao_arquivo not in extensoes_permitidas:
-        extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-        return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
-    
+        # Verificar se o arquivo está vazio
+        if arquivo.filename == '':
+            return 'O arquivo está vazio', 400
 
-    # leitura do arquivo
-    if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls' or extensao_arquivo == 'csv': 
-        try:
-            P1 = pd.read_excel(arquivo, header=3)
-        except Exception as e:
-            return f"Erro na leitura do arquivo {e}", 400
+        # Verificar a extensão do arquivo
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
+        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+        if extensao_arquivo not in extensoes_permitidas:
+            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+            return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
 
-    
+        # leitura do arquivo
+        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+            try:
+                P1 = pd.read_excel(arquivo, header=3)
+            except Exception as e:
+                return f"Erro na leitura do arquivo {e}", 400
 
-    # Verifica se as colunas existem no arquivo
-    colunas_arquivo = P1.columns.tolist()
-    colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
-    for coluna in colunas_obrigatorias:
-        if coluna not in colunas_arquivo:
-            return f'Arquivo errado, por favor importe o relaório de empenho e destaques analiticos', 400
-        else:
-            # Restante do seu código para processar o arquivo
-            mask = P1['Despes'].astype(str).str.endswith('92')
-            soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
-            soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
-            valor_total = soma_dea + soma_sem_dea
-            execucao_dea = round((soma_dea / valor_total) * 100, 2)
-            despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
-            return despezas_de_execicios_anteriores.to_json(orient='columns')
+        # Verifica se as colunas existem no arquivo
+        colunas_arquivo = P1.columns.tolist()
+        colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return f'Arquivo errado, por favor importe o relatório de empenho e destaques analíticos', 400
+            else:
+                # Restante do seu código para processar o arquivo
+                mask = P1['Despes'].astype(str).str.endswith('92')
+                soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
+                soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
+                valor_total = soma_dea + soma_sem_dea
+                execucao_dea = round((soma_dea / valor_total) * 100, 2)
+                despezas_de_execicios_anteriores = pd.DataFrame([soma_dea, valor_total, execucao_dea],
+                                                                index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
+                # Converte o DataFrame em JSON
+                result_json = despezas_de_execicios_anteriores.to_json(orient='columns')
+                return result_json  # Retorna o JSON como resposta
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+   
 
 @app.route('/despesas', methods = ['POST'])
 @jwt_required()
@@ -493,6 +497,71 @@ def ranking():
         return jsonify({"error": str(e)}), 500
     
 
+@app.route('/transparencia/ranking-assunto', methods=['POST'])
+@jwt_required()
+def ranking_assunto():
+    try:
+        # Verificar se o arquivo foi enviado
+        if 'file' not in request.files:
+            return 'Nenhum arquivo enviado', 400
+
+        # Obter o arquivo enviado
+        arquivo = request.files['file']
+
+        # Verificar se o arquivo está vazio
+        if arquivo.filename == '':
+            return 'O arquivo está vazio', 400
+
+        # Verificar a extensão do arquivo
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
+        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+        if extensao_arquivo not in extensoes_permitidas:
+            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+            return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
+
+        # Leitura do arquivo
+        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+            try:
+                rpedidos = pd.read_excel(arquivo, header=4)
+            except Exception as e:
+                return f"Erro na leitura do arquivo {e}", 400
+
+            colunas_arquivo = rpedidos.columns.tolist()
+            colunas_obrigatorias = ['Orgão (SIC)','Situação\n(*)','Assunto','Nº de pedidos fora do prazo (> 20 dias)','Quantidade','Recurso de 1ª Instância','Recurso de 2ª Instância','Recurso de 3ª Instância',]
+
+            for coluna in colunas_obrigatorias:
+                if coluna not in colunas_arquivo:
+                    return f'Arquivo errado, por favor importar o relatório de pedidos', 400
+
+            # Obter o órgão especificado pelo usuário, se fornecido
+            orgao_desejado = request.form.get('orgao')
+
+            if orgao_desejado:
+                orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
+
+                # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
+                manifestacoes_orgao = rpedidos[rpedidos['ÓRGÃOS'].str.upper() == orgao_desejado]
+
+                # Calcular o total de manifestações para o órgão especificado
+                total_manifestacoes = len(manifestacoes_orgao)
+
+                return f'Total de pedidos para o órgão {orgao_desejado}: {total_manifestacoes}', 200
+            else:
+                # Se o órgão não foi especificado, calcular o total de manifestações para todos os órgãos
+                total_manifestacoes = rpedidos.groupby(['ÓRGÃOS']).size()
+
+                return f'Total de pedidos de todos os órgãos: {total_manifestacoes}', 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    # Incluir o código da função pedidos aqui
+    df_base = pd.read_excel(arquivo, header=4)
+    df_final = df_base[['Nº de Pedidos', 'Nº de pedidos dentro do prazo (20 dias)', 'Nº de pedidos fora do prazo (> 20 dias)', 'Tempo Médio de Resposta do Pedido', 'Recurso de 1ª Instância', 'Recurso de 2ª Instância', 'Recurso de 3ª Instância']]
+    #df_final.to_excel(f'{dir(arquivo)}Resultados Transparencia - {orgao_desejado}.xlsx',index=False)
+    #df_final.to_excel('Resultados Transparencia-CGM.xlsx')
+    return df_final
+
+
 @app.route('/transparencia/pedidos', methods=['POST'])
 @jwt_required()
 def pedidos():
@@ -554,5 +623,5 @@ def pedidos():
     df_base = pd.read_excel(arquivo, header=4)
     df_final = df_base[['Nº de Pedidos', 'Nº de pedidos dentro do prazo (20 dias)', 'Nº de pedidos fora do prazo (> 20 dias)', 'Tempo Médio de Resposta do Pedido', 'Recurso de 1ª Instância', 'Recurso de 2ª Instância', 'Recurso de 3ª Instância']]
     #df_final.to_excel(f'{dir(arquivo)}Resultados Transparencia - {orgao_desejado}.xlsx',index=False)
-    df_final.to_excel('Resultados Transparencia-CGM.xlsx')
+    #df_final.to_excel('Resultados Transparencia-CGM.xlsx')
     return df_final
