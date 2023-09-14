@@ -69,27 +69,25 @@ def contratos(rcs, PMaster, Padi, n=10,):
     return result.loc
 
 
-def dea(P1):
+def dea(arquivo):
     '''
     Gera um filtro que pega os valores com DEA e os valores sem DEA e os soma.
     O cálculo da execução de DEA é a divisão da soma de DEA pelo valor total.\n
-    OBS: Para saber se um contrato tem DEA, a coluna 'Despes' da Planilha armazenada na variável P1 tem que terminar com 92.\n
-    re = Relatório de Empenho, armazena o caminho onde a planilha gerada pelo código será gerada.\n
-    P1 = Armazena a informação da planilha que usamos para aferir o DEA\n
+    OBS: Para saber se um contrato tem DEA, a coluna 'Despes' da Planilha armazenada na variável arquivo tem que terminar com 92.\n
+    arquivo = Relatorio de Destaques e Empenhos Analíticos\n
     '''
-    # Filtra linhas onde o valor de 'Despes' termina em '92'
-    mask = P1['Despes'].astype(str).str.endswith('92')
+    try:
+        P1 = pd.read_excel(arquivo, header=3)
 
-    # Soma os valores correspondentes
-    soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
-    soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
-
-    valor_total = soma_dea + soma_sem_dea
-    execucao_dea = round((soma_dea / valor_total) * 100, 2)
-    despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
-    #despezas_de_execicios_anteriores.to_excel(f'{dir(re)}DEA.xlsx', index=True)
-    #despezas_de_execicios_anteriores.to_excel('DEA-CGM.xlsx')
-    return(despezas_de_execicios_anteriores)
+        mask = P1['Despes'].astype(str).str.endswith('92')
+        soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
+        soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
+        valor_total = soma_dea + soma_sem_dea
+        execucao_dea = round((soma_dea / valor_total) * 100, 2)
+        despezas_de_execicios_anteriores = pd.DataFrame([soma_dea, valor_total, execucao_dea], index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
+        return despezas_de_execicios_anteriores.to_json(orient='columns')
+    except Exception as e:
+        return {"error": f"Erro na função dea: {str(e)}"}, None
 
 
 def gestão(rcs, PMaster, Padi, n=10):
@@ -157,16 +155,19 @@ def gestão(rcs, PMaster, Padi, n=10):
         return result
 
 
-def despesas(rdesp, P4):
+def despezas(arquivo):
     '''
     Despesas por programa e comparação com o contrato.\n
     Utilizando a planilha P4 para o cálculo do percentual do que foi empenhado no mês com o saldo da dotação atual.\n
-    rdesp = relatório de despesa\n
-    p4 = planilha usada para a obtenãdo dos dados para o cálculo da porcentagem.
+    arquivo = Relatório Acompanhamento e Execução Orçamentaria\n
     '''
-    TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
-    TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês']/TabDespesadf['Sd Dot.Atual']) * 100, 2)
-    TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
-    #TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
-    TabDespesadf.to_excel('Despesas-CGM.xlsx')
-    return TabDespesadf
+    try: 
+        P4 = pd.read_excel(arquivo, header=1)
+        TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
+        TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês']/TabDespesadf['Sd Dot.Atual']) * 100, 2)
+        TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
+        #TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
+        #TabDespesadf.to_excel('Despesas-CGM.xlsx')
+        return TabDespesadf
+    except Exception as e:
+         return f"Erro na função despezas: {str(e)}", 400

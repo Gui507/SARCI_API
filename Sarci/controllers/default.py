@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
 from Sarci.controllers import contratos
+import json
 # import psycopg2
 # import dotenv
 # import os
@@ -60,6 +61,37 @@ db =[
 }
 ]
 
+def verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo,header):
+    # Verificar se o arquivo foi enviado
+    if 'file' not in request.files:
+        return False, 'Nenhum arquivo enviado'
+
+    arquivo = request.files['file']
+
+    # Verificar se o arquivo está vazio
+    if arquivo.filename == '':
+        return False, 'O arquivo está vazio'
+
+    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
+
+    # Verificar a extensão do arquivo
+    if extensao_arquivo not in extensoes_permitidas:
+        extensoes_permitidas_str = ', '.join(extensoes_permitidas)
+        return False, f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}'
+
+    if extensao_arquivo in ['xlsx', 'xls', 'csv']:
+        try:
+            P1 = pd.read_excel(arquivo, header=header)
+        except Exception as e:
+            return False, f"Erro na leitura do arquivo {e}"
+
+        colunas_arquivo = P1.columns.tolist()
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return False, f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
+
+    return True, arquivo
+
 
 @app.route('/', methods = ['GET'])
 def print():
@@ -91,96 +123,41 @@ def login():
 @jwt_required()
 def dea():
     try:
-        # Verificar se o arquivo foi enviado
-        if 'file' not in request.files:
-            return 'Nenhum arquivo enviado', 400
-
-        # Obter o arquivo enviado
-        arquivo = request.files['file']
-
-        # Verificar se o arquivo está vazio
-        if arquivo.filename == '':
-            return 'O arquivo está vazio', 400
-
-        # Verificar a extensão do arquivo
-        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
-        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-        if extensao_arquivo not in extensoes_permitidas:
-            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-            return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
-
-        # leitura do arquivo
-        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
-            try:
-                P1 = pd.read_excel(arquivo, header=3)
-            except Exception as e:
-                return f"Erro na leitura do arquivo {e}", 400
-
-        # Verifica se as colunas existem no arquivo
-        colunas_arquivo = P1.columns.tolist()
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
         colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
-        for coluna in colunas_obrigatorias:
-            if coluna not in colunas_arquivo:
-                return f'Arquivo errado, por favor importe o relatório de empenho e destaques analíticos', 400
-            else:
-                # Restante do seu código para processar o arquivo
-                mask = P1['Despes'].astype(str).str.endswith('92')
-                soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
-                soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
-                valor_total = soma_dea + soma_sem_dea
-                execucao_dea = round((soma_dea / valor_total) * 100, 2)
-                despezas_de_execicios_anteriores = pd.DataFrame([soma_dea, valor_total, execucao_dea],
-                                                                index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
-                # Converte o DataFrame em JSON
-                result_json = despezas_de_execicios_anteriores.to_json(orient='columns')
-                return result_json  # Retorna o JSON como resposta
+        nome_do_arquivo='Relatório de Destaques e Empenhos Analítico'
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=3)
+        if not arquivo_valido:
+            return arquivo, 400
+
+        a = contratos.dea(arquivo)  # Chame a função dea do seu arquivo contratos.py
+          # Converta o resultado em JSON
+
+        return a  # Retorne o JSON como resposta
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
    
 
-@app.route('/despesas', methods = ['POST'])
+@app.route('/despezas', methods = ['POST'])
 @jwt_required()
-def despesas():
-    # Verificar se o arquivo foi enviado
-    if 'file' not in request.files:
-        return 'Nenhum arquivo enviado', 400
+def despezas_route():
+    try:
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        colunas_obrigatorias = ['Descrição do Programa', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
+        nome_do_arquivo='Relatório Acompanhamento e Execução Orçamentaria'
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=1)
+        if not arquivo_valido:
+            return arquivo, 400
 
-    # Obter o arquivo enviado
-    arquivo = request.files['file']
+        a = contratos.despezas(arquivo)  # Chame a função dea do seu arquivo contratos.py
+          # Converta o resultado em JSON
 
-    # Verificar se o arquivo está vazio
-    if arquivo.filename == '':
-        return 'O arquivo está vazio', 400
-    
-    # Verificar a extensão do arquivo
-    extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
-    extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-    if extensao_arquivo not in extensoes_permitidas:
-        extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-        return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
-    
-    # leitura do arquivo
-    if extensao_arquivo == 'xlsx' or extensao_arquivo == 'xls' or extensao_arquivo == 'csv': 
-        try:
-            P4 = pd.read_excel(arquivo, header=1)
-        except Exception as e:
-            return f"Erro na leitura do arquivo {e}", 400
+        return a  # Retorne o JSON como resposta
 
-    colunas_arquivo = P4.columns.tolist()
-    colunas_obrigatorias = ['Descrição do Programa', 'Progr.', 'Emp. No Mês', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    for coluna in colunas_obrigatorias:
-        if coluna not in colunas_arquivo:
-            return f'Arquivo errado, por favor importar o relatorio de despesas', 400
-        else:
-            TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
-            TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês'] / TabDespesadf['Sd Dot.Atual']) * 100, 2)
-            TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
-            # TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
-            # TabDespesadf.to_excel('Despesas-CGM.xlsx')
-            return TabDespesadf.to_json(orient='columns')
-        
 
 @app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
 @jwt_required()
