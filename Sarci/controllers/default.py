@@ -61,7 +61,7 @@ db =[
 }
 ]
 
-def verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo,header):
+def verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo,header=0):
     # Verificar se o arquivo foi enviado
     if 'file' not in request.files:
         return False, 'Nenhum arquivo enviado'
@@ -166,7 +166,7 @@ def total_manifest():
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
         colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
         nome_do_arquivo='Relatório de Manifestação'
-        orgao_desejado = request.form.get('orgao')
+        orgao_desejado = request.form.get('orgao').upper()
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
         if not arquivo_valido:
             return arquivo, 400
@@ -185,10 +185,10 @@ def total_manifest():
 def contagem():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO','Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
         nome_do_arquivo='Relatório de Manifestação'
-        orgao_desejado = request.form.get('orgao')
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=1)
+        orgao_desejado = request.form.get('orgao').upper()
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
         if not arquivo_valido:
             return arquivo, 400
 

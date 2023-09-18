@@ -7,14 +7,16 @@ def dir(arq):
 
 
 def contagem(rmanifest, uo):
-    df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO').groupby('ÓRGÃO')
-    counts = df['TIPO DE MANIFESTAÇÃO'].value_counts()
-    counts_uo = counts[uo]
-    counts_uo = counts_uo.to_frame().transpose()  # Transpor o DataFrame
-    columns_order = ['Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']
-    counts_uo = counts_uo.reindex(columns_order, axis=1)  # Reordenar as colunas
-    return counts_uo
-
+    try: 
+        df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO').groupby('ÓRGÃO')
+        counts = df['TIPO DE MANIFESTAÇÃO'].value_counts()
+        counts_uo = counts[uo]
+        counts_uo = counts_uo.to_frame().transpose()  # Transpor o DataFrame
+        columns_order = ['Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']
+        counts_uo = counts_uo.reindex(columns_order, axis=1)  # Reordenar as colunas
+        return counts_uo.to_json(orient='columns')
+    except Exception as e:
+        return {"error": f"Erro na função dea: {str(e)}"}, None
 
 def total(rmanifest, uo):
     manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
