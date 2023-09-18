@@ -168,6 +168,6 @@ def despezas(arquivo):
         TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
         #TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
         #TabDespesadf.to_excel('Despesas-CGM.xlsx')
-        return TabDespesadf
+        return TabDespesadf.to_json(orient='columns')
     except Exception as e:
          return f"Erro na função despezas: {str(e)}", 400

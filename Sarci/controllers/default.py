@@ -3,7 +3,7 @@ from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
-from Sarci.controllers import contratos
+from Sarci.controllers import contratos, ouvidoria
 import json
 # import psycopg2
 # import dotenv
@@ -162,61 +162,21 @@ def despezas_route():
 @app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
 @jwt_required()
 def total_manifest():
-   try:
-        # Verificar se o arquivo foi enviado
-        if 'file' not in request.files:
-            return 'Nenhum arquivo enviado', 400
+    try:
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        nome_do_arquivo='Relatório de Manifestação'
+        orgao_desejado = request.form.get('orgao')
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        if not arquivo_valido:
+            return arquivo, 400
 
-        # Obter o arquivo enviado
-        arquivo = request.files['file']
+        a = ouvidoria.total(arquivo,orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+        # Converta o resultado em JSON
 
-        # Verificar se o arquivo está vazio
-        if arquivo.filename == '':
-            return 'O arquivo está vazio', 400
+        return a  # Retorne o JSON como resposta
 
-        # Verificar a extensão do arquivo
-        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
-        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-        if extensao_arquivo not in extensoes_permitidas:
-            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-            return f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}', 400
-
-        # Leitura do arquivo
-        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
-            try:
-                rmanifest = pd.read_excel(arquivo)
-            except Exception as e:
-                return f"Erro na leitura do arquivo {e}", 400
-
-            colunas_arquivo = rmanifest.columns.tolist()
-            colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO']
-
-            for coluna in colunas_obrigatorias:
-                if coluna not in colunas_arquivo:
-                    return f'Arquivo errado, por favor importar o relatório de manifestações', 400
-
-            # Obter o órgão especificado pelo usuário, se fornecido
-            orgao_desejado = request.form.get('orgao')
-            
-            # Remover protocolos duplicados
-            rmanifest.drop_duplicates(subset=['PROTOCOLO'], inplace=True)
-
-            if orgao_desejado:
-                orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
-
-                # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
-                manifestacoes_orgao = rmanifest[rmanifest['ÓRGÃO'].str.upper() == orgao_desejado]
-
-                # Calcular o total de manifestações para o órgão especificado
-                total_manifestacoes = len(manifestacoes_orgao)
-
-                return f'Total de manifestações para o órgão {orgao_desejado}: {total_manifestacoes}', 200
-            else:
-                # Se o órgão não foi especificado, calcular o total de manifestações para todos os órgãos
-                total_manifestacoes = rmanifest.groupby(['ÓRGÃO']).size()
-
-                return f'Total de manifestações de todos os órgãos: {total_manifestacoes}', 200
-   except Exception as e:
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
@@ -224,55 +184,21 @@ def total_manifest():
 @jwt_required()
 def contagem():
     try:
-        # Verificar se o arquivo foi enviado
-        if 'file' not in request.files:
-            return jsonify({"error": "Nenhum arquivo enviado"}), 400
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO','Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']
+        nome_do_arquivo='Relatório de Manifestação'
+        orgao_desejado = request.form.get('orgao')
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=1)
+        if not arquivo_valido:
+            return arquivo, 400
 
-        # Obter o arquivo enviado
-        arquivo = request.files['file']
+        a = ouvidoria.contagem(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+            # Converta o resultado em JSON
 
-        # Verificar se o arquivo está vazio
-        if arquivo.filename == '':
-            return jsonify({"error": "O arquivo está vazio"}), 400
-
-        # Verificar a extensão do arquivo
-        extensoes_permitidas = ['xlsx', 'csv', 'xls']  # Exemplo de lista de extensões permitidas
-        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-        if extensao_arquivo not in extensoes_permitidas:
-            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-            return jsonify({"error": f"Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}"}), 400
-
-        # Leitura do arquivo
-        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
-            try:
-                rmanifest = pd.read_excel(arquivo)
-            except Exception as e:
-                return jsonify({"error": f"Erro na leitura do arquivo {e}"}), 400
-
-            # Remover protocolos duplicados
-            rmanifest.drop_duplicates(subset=['PROTOCOLO'], inplace=True)
-
-            # Obter o órgão especificado pelo usuário, se fornecido
-            orgao_desejado = request.form.get('orgao')
-            if orgao_desejado:
-                orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
-
-                # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
-                manifestacoes_orgao = rmanifest[rmanifest['ÓRGÃO'].str.upper() == orgao_desejado]
-
-                # Calcular o total de manifestações por tipo para o órgão especificado
-                total_manifestacoes_tipo = manifestacoes_orgao['TIPO DE MANIFESTAÇÃO'].value_counts().to_dict()
-
-                return jsonify(total_manifestacoes_tipo), 200
-            else:
-                # Se o órgão não foi especificado, calcular o total de manifestações por tipo para todos os órgãos
-                total_manifestacoes_tipo = rmanifest['TIPO DE MANIFESTAÇÃO'].value_counts().to_dict()
-
-                return jsonify(total_manifestacoes_tipo), 200
+        return a  # Retorne o JSON como resposta
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/ouvidoria/total-respondidas', methods=['POST'])
 @jwt_required()
