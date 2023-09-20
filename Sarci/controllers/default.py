@@ -204,62 +204,19 @@ def contagem():
 @jwt_required()
 def respondidas():
     try:
-        # Verificar se o arquivo foi enviado
-        if 'file' not in request.files:
-            return jsonify({"error": "Nenhum arquivo enviado"}), 400
-
-        # Obter o arquivo enviado
-        arquivo = request.files['file']
-
-        # Verificar se o arquivo está vazio
-        if arquivo.filename == '':
-            return jsonify({"error": "O arquivo está vazio"}), 400
-
-        # Verificar a extensão do arquivo
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        extensao_arquivo = arquivo.filename.rsplit('.', 1)[1].lower()
-        if extensao_arquivo not in extensoes_permitidas:
-            extensoes_permitidas_str = ', '.join(extensoes_permitidas)
-            return jsonify({"error": f"Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}"}), 400
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        nome_do_arquivo='Relatório de Manifestação'
+        orgao_desejado = request.form.get('orgao').upper()
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        if not arquivo_valido:
+            return arquivo, 400
 
-        # Leitura do arquivo
-        if extensao_arquivo in ['xlsx', 'xls', 'csv']:
-            try:
-                rmanifest = pd.read_excel(arquivo)
-            except pd.errors.ParserError as e:
-                return jsonify({"error": f"Erro na leitura do arquivo: {str(e)}"}), 400
-            
-            colunas_arquivo = rmanifest.columns.tolist()
-            colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'DATA DE RESPOSTA']
-            for coluna in colunas_obrigatorias:
-                if coluna not in colunas_arquivo:
-                    return jsonify({"error": "Arquivo errado, por favor importar o relatório de manifestações"}), 400
-            
-            try:
-                # Remover protocolos duplicados
-                rmanifest.drop_duplicates(subset=['PROTOCOLO'], inplace=True)
-                
-                # Filtrar as respostas do ano atual
-                ano_atual = pd.Timestamp.now().year
-                manifest_respondidas = rmanifest.dropna(subset=['DATA DE RESPOSTA'])
-                manifest_respondidas['DATA DE RESPOSTA'] = pd.to_datetime(manifest_respondidas['DATA DE RESPOSTA'], dayfirst=True)
-                manifest_respondidas = manifest_respondidas[manifest_respondidas['DATA DE RESPOSTA'].dt.year == ano_atual]
-                manifest_por_orgao = manifest_respondidas.groupby('ÓRGÃO').size()
+        a = ouvidoria.respondidas(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+            # Converta o resultado em JSON
 
-                # Obter o órgão especificado pelo usuário, se fornecido
-                orgao_desejado = request.form.get('orgao')
-                if orgao_desejado:
-                    orgao_desejado = orgao_desejado.upper()  # Converter para maiúsculas
+        return a  # Retorne o JSON como resposta
 
-                    # Filtrar as manifestações pelo órgão especificado (insensível a maiúsculas/minúsculas)
-                    manifestacoes_orgao = manifest_por_orgao[manifest_por_orgao.index.str.upper() == orgao_desejado]
-
-                    return jsonify(manifestacoes_orgao.to_dict()), 200
-                else:
-                    # Se o órgão não foi especificado, calcular o total de manifestações por tipo para todos os órgãos
-                    return jsonify(manifest_por_orgao.to_dict()), 200
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
