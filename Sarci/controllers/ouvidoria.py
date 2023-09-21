@@ -66,3 +66,16 @@ def ranking_assunto(rmanifest,uo):
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
     
+def total(rmanifest, uo=None):
+    try:
+        manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
+        if uo:
+            uo = uo.upper()  # Transforma o órgão especificado em maiúsculas
+            if uo not in manifest['ÓRGÃO'].str.upper().unique():
+                return {"error": f"ÓRGÃO '{uo}' não encontrado nos arquivos"}
+            total = manifest[manifest['ÓRGÃO'].str.upper() == uo].shape[0]
+        else:
+            total = manifest.groupby(['ÓRGÃO']).size().to_dict()
+        return total
+    except Exception as e:
+        return {"error": f"Erro na função total do módulo ouvidoria: {str(e)}"}
