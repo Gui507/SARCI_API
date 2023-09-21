@@ -1,4 +1,5 @@
 import pandas as pd
+
 ano_atual = pd.Timestamp.now().year
 def dir(arq):
     "Armazena o diretório do arquivo"
@@ -18,13 +19,13 @@ def contagem(rmanifest, uo):
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
 
-def total(rmanifest, uo):
-    try:
-        manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
-        total = manifest.groupby(['ÓRGÃO']).size()
-        return total[uo]
-    except Exception as e:
-        return {"error": f"Erro na função dea: {str(e)}"}, None
+#def total(rmanifest, uo):
+#    try:
+#        manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
+#        total = manifest.groupby(['ÓRGÃO']).size()
+#        return total[uo]
+#    except Exception as e:
+#        return {"error": f"Erro na função dea: {str(e)}"}, None
 
 def respondidas(rmanifest, uo):
     try:
@@ -64,3 +65,4 @@ def ranking_assunto(rmanifest,uo):
         return ranking_uo
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
+    
