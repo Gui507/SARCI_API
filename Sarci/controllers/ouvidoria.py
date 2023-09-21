@@ -13,15 +13,20 @@ def verificar(arq, colunas_obrigatorias, nome_do_arquivo, c=0):
     except Exception as e:
         return False, f"Erro na leitura do arquivo {e}"
 
-def contagem(rmanifest, uo):
+def contagem(rmanifest, uo=None):
     try: 
-        df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO').groupby('ÓRGÃO')
+        df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
+        
+        if uo:
+            uo = uo.upper()  # Transforma o órgão especificado em maiúsculas
+            if uo not in df['ÓRGÃO'].str.upper().unique():
+                return {"error": f"ÓRGÃO '{uo}' não encontrado nos dados"}
+            df = df[df['ÓRGÃO'].str.upper() == uo]
+
         counts = df['TIPO DE MANIFESTAÇÃO'].value_counts()
-        counts_uo = counts[uo]
-        counts_uo = counts_uo.to_frame().transpose()  # Transpor o DataFrame
-        columns_order = ['Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']
-        counts_uo = counts_uo.reindex(columns_order, axis=1)  # Reordenar as colunas
-        return counts_uo.to_json(orient='columns')
+        counts = counts.reindex(['Elogio', 'Denúncia', 'Reclamação', 'Solicitação', 'Sugestão']).fillna(0)
+        counts = counts.to_frame().transpose()  # Transpor o DataFrame
+        return counts.to_json(orient='columns')
     except Exception as e:
         return {"error": f"Erro na função contagem: {str(e)}"}
 
