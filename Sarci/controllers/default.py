@@ -130,9 +130,7 @@ def dea():
 def despezas_route():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['Descrição do Programa', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
-        nome_do_arquivo='Relatório Acompanhamento e Execução Orçamentaria'
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=1)
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
@@ -150,6 +148,9 @@ def despezas_route():
 def total_manifest():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
+
+        
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
         nome_do_arquivo='Relatório de Manifestação'
         orgao_desejado = request.form.get('orgao')

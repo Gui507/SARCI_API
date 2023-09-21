@@ -1,11 +1,18 @@
 import pandas as pd
 import datetime
 
-def dir(arq):
-    "Armazena o diretório do arquivo"
-    d = arq.rfind('/'or '\\')
-    return (arq[:d+1])
+def verificar(arq, colunas_obrigatorias, nome_do_arquivo, c=0):
+    try:
+        df = pd.read_excel(arq, header=c)
+        colunas_arquivo = df.columns.tolist()
 
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
+            else:
+                return True
+    except Exception as e:
+        return False, f"Erro na leitura do arquivo {e}"
 
 def contratos(rcs, PMaster, Padi, n=10,):
     """
