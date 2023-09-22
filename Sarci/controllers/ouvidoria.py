@@ -19,13 +19,13 @@ def contagem(rmanifest, uo):
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
 
-#def total(rmanifest, uo):
-#    try:
-#        manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
-#        total = manifest.groupby(['ÓRGÃO']).size()
-#        return total[uo]
-#    except Exception as e:
-#        return {"error": f"Erro na função dea: {str(e)}"}, None
+def total(rmanifest, uo):
+    try:
+        manifest = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
+        total = manifest.groupby(['ÓRGÃO']).size()
+        return total[uo]
+    except Exception as e:
+        return {"error": f"Erro na função dea: {str(e)}"}, None
 
 def respondidas(rmanifest, uo):
     try:

@@ -61,7 +61,7 @@ db =[
 }
 ]
 
-def verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo,header=0):
+def verificar_arquivo(request, extensoes_permitidas):
     # Verificar se o arquivo foi enviado
     if 'file' not in request.files:
         return False, 'Nenhum arquivo enviado'
@@ -78,24 +78,6 @@ def verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_
     if extensao_arquivo not in extensoes_permitidas:
         extensoes_permitidas_str = ', '.join(extensoes_permitidas)
         return False, f'Formato de arquivo inválido. Por favor, envie um arquivo com as extensões permitidas: {extensoes_permitidas_str}'
-
-    if extensao_arquivo in ['xlsx', 'xls', 'csv']:
-        try:
-            P1 = pd.read_excel(arquivo, header=header)
-        except Exception as e:
-            return False, f"Erro na leitura do arquivo {e}"
-    
-    if extensao_arquivo in ['pdf', 'docx']:
-        try:
-            P1 = pd.read_excel(arquivo, header=header)
-        except Exception as e:
-            return False, f"Erro na leitura do arquivo {e}"
-
-        colunas_arquivo = P1.columns.tolist()
-        for coluna in colunas_obrigatorias:
-            if coluna not in colunas_arquivo:
-                return False, f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
-
     return True, arquivo
 
 
@@ -119,7 +101,7 @@ def login():
                 break
 
         if matching_user:
-            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=20))
+            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
             return jsonify({'access_token': access_token})
         else:
             return jsonify({'message': 'Invalid credentials'})
@@ -130,9 +112,7 @@ def login():
 def dea():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
-        nome_do_arquivo='Relatório de Destaques e Empenhos Analítico'
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=3)
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
@@ -165,30 +145,9 @@ def despezas_route():
         return jsonify({"error": str(e)}), 500
 
 
-#@app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
-#@jwt_required()
-#def total_manifest():
-#    try:
-#        extensoes_permitidas = ['xlsx', 'csv', 'xls']
-#        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-#        nome_do_arquivo='Relatório de Manifestação'
-#        orgao_desejado = request.form.get('orgao')
-#        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
-#        if not arquivo_valido:
-#            return arquivo, 400
-#
-#        a = ouvidoria.total(arquivo,orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
-#        # Converta o resultado em JSON
-#
-#        return a  # Retorne o JSON como resposta
-#
-#    except Exception as e:
-#        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/ouvidoria/total-tipos', methods=['POST'])
+@app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
 @jwt_required()
-def contagem():
+def total_manifest():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
         colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
@@ -198,13 +157,34 @@ def contagem():
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.contagem(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
-            # Converta o resultado em JSON
+        a = ouvidoria.total(arquivo,orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+        # Converta o resultado em JSON
 
         return a  # Retorne o JSON como resposta
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/ouvidoria/total-tipos', methods=['POST'])
+@jwt_required()
+def contagem():
+    try:
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        nome_do_arquivo = 'Relatório de Manifestação'
+        orgao_desejado = request.form.get('orgao')
+        
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        if not arquivo_valido:
+            return arquivo, 400
+
+        resultado = ouvidoria.contagem(arquivo, orgao_desejado)  # Chame a função contagem do seu arquivo ouvidoria.py
+        return jsonify(resultado)  # Retorne o resultado em formato JSON
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 @app.route('/ouvidoria/total-respondidas', methods=['POST'])
 @jwt_required()

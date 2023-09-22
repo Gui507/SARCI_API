@@ -78,6 +78,14 @@ def dea(arquivo):
     '''
     try:
         P1 = pd.read_excel(arquivo, header=3)
+        colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
+        colunas_arquivo = P1.columns.tolist()
+        nome_do_arquivo='Relatório de Destaques e Empenhos Analítico'
+        
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
+                break
 
         mask = P1['Despes'].astype(str).str.endswith('92')
         soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
@@ -163,6 +171,15 @@ def despezas(arquivo):
     '''
     try: 
         P4 = pd.read_excel(arquivo, header=1)
+        colunas_obrigatorias = ['Descrição do Programa', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']
+        colunas_arquivo = P4.columns.tolist()
+        nome_do_arquivo='Relatório Acompanhamento e Execução Orçamentaria'
+
+        for coluna in colunas_obrigatorias:
+            if coluna not in colunas_arquivo:
+                return f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
+                break
+
         TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
         TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês']/TabDespesadf['Sd Dot.Atual']) * 100, 2)
         TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
