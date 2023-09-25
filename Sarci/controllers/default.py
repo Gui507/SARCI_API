@@ -134,7 +134,7 @@ def despezas_route():
         if not arquivo_valido:
             return arquivo, 400
 
-        a = contratos.despezas(arquivo)  # Chame a função dea do seu arquivo contratos.py
+        a = contratos.despezas(arquivo)  # Chame a função despezas do seu arquivo contratos.py
           # Converta o resultado em JSON
 
         return a  # Retorne o JSON como resposta
@@ -146,44 +146,52 @@ def despezas_route():
 @app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
 @jwt_required()
 def total_manifest():
-    try:
+   try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-
-        
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo='Relatório de Manifestação'
         orgao_desejado = request.form.get('orgao')
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.total(arquivo,orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
+
+        resultado = ouvidoria.total(arquivo, uo=orgao_desejado)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
         # Converta o resultado em JSON
+        return jsonify(resultado)
 
-        return a  # Retorne o JSON como resposta
-
-    except Exception as e:
+   except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+   
 
 @app.route('/ouvidoria/total-tipos', methods=['POST'])
 @jwt_required()
 def contagem():
-    try:
+  try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo = 'Relatório de Manifestação'
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         orgao_desejado = request.form.get('orgao')
         
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
         if not arquivo_valido:
             return arquivo, 400
 
-        resultado = ouvidoria.contagem(arquivo, orgao_desejado)  # Chame a função contagem do seu arquivo ouvidoria.py
-        return jsonify(resultado)  # Retorne o resultado em formato JSON
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
 
-    except Exception as e:
+        resultado = ouvidoria.contagem(arquivo, uo=orgao_desejado)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return jsonify(resultado)
+
+  except Exception as e:
         return jsonify({"error": str(e)}), 500
     
 
@@ -192,14 +200,14 @@ def contagem():
 def respondidas():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo='Relatório de Manifestação'
+        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        #nome_do_arquivo='Relatório de Manifestação'
         orgao_desejado = request.form.get('orgao')
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.respondidas(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
+        a = ouvidoria.respondidas(arquivo, orgao_desejado)  # Chame a função respondidas do seu arquivo ouvidoria.py
             # Converta o resultado em JSON
 
         return a  # Retorne o JSON como resposta
@@ -213,10 +221,10 @@ def respondidas():
 def tempo_medio():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo='Relatório de Manifestação'
+        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        #nome_do_arquivo='Relatório de Manifestação'
         orgao_desejado = request.form.get('orgao')
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
@@ -228,15 +236,16 @@ def tempo_medio():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/ouvidoria/ranking-assunto', methods=['POST'])
 @jwt_required()
 def ranking():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo='Relatório de Manifestação'
+        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
+        #nome_do_arquivo='Relatório de Manifestação'
         orgao_desejado = request.form.get('orgao')
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
@@ -248,22 +257,4 @@ def ranking():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
-@jwt_required()
-def total_manifest():
-    try:
-        extensoes_permitidas=['xlsx','csv', 'xls']
-        colunas_obrigatorias=['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        nome_do_arquivo = 'Relatório de Manifestação'
 
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas, colunas_obrigatorias, nome_do_arquivo, header=0)
-        if not arquivo_valido:
-            return arquivo, 400
-        
-        orgao_desejado = request.form.get('orgao')
-        resultado = ouvidoria.total(arquivo, orgao_desejado)
-        return jsonify(resultado)
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
