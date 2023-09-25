@@ -198,63 +198,76 @@ def contagem():
 @app.route('/ouvidoria/total-respondidas', methods=['POST'])
 @jwt_required()
 def respondidas():
-    try:
+  try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        #nome_do_arquivo='Relatório de Manifestação'
-        orgao_desejado = request.form.get('orgao')
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        orgao_desejado = request.form.get('orgao')
+        
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.respondidas(arquivo, orgao_desejado)  # Chame a função respondidas do seu arquivo ouvidoria.py
-            # Converta o resultado em JSON
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
 
-        return a  # Retorne o JSON como resposta
+        resultado = ouvidoria.respondidas(arquivo, uo=orgao_desejado)
 
-    except Exception as e:
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return jsonify(resultado)
+
+  except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/ouvidoria/tempo-medio', methods=['POST'])
 @jwt_required()
 def tempo_medio():
-    try:
+  try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        #nome_do_arquivo='Relatório de Manifestação'
-        orgao_desejado = request.form.get('orgao')
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        orgao_desejado = request.form.get('orgao')
+        
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.tempomedioresp(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
-            # Converta o resultado em JSON
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
 
-        return a  # Retorne o JSON como resposta
+        resultado = ouvidoria.tempomedioresp(arquivo, uo=orgao_desejado)
 
-    except Exception as e:
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return jsonify(resultado)
+
+  except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/ouvidoria/ranking-assunto', methods=['POST'])
 @jwt_required()
 def ranking():
-    try:
+  try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        #colunas_obrigatorias = ['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO']
-        #nome_do_arquivo='Relatório de Manifestação'
-        orgao_desejado = request.form.get('orgao')
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        orgao_desejado = request.form.get('orgao')
+        
         if not arquivo_valido:
             return arquivo, 400
 
-        a = ouvidoria.ranking_assunto(arquivo, orgao_desejado)  # Chame a função dea do seu arquivo contratos.py
-            # Converta o resultado em JSON
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
 
-        return a  # Retorne o JSON como resposta
+        resultado = ouvidoria.ranking_assunto(arquivo, uo=orgao_desejado)
 
-    except Exception as e:
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return jsonify(resultado)
+
+  except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 

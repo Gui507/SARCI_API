@@ -121,18 +121,28 @@ def tempomedioresp(rmanifest, uo=None):
     except Exception as e:
         return {"error": f"Erro na função tempomedioresp: {str(e)}"}
 
-def ranking_assunto(rmanifest, uo):
+def ranking_assunto(rmanifest, uo=None):
     verifica = verificar(rmanifest, colunas_obrigatorias=['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO'], nome_do_arquivo='Relatório de Manifestação')
     if verifica is not True:
         return verifica
+    
     try:
-        df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO').groupby('ÓRGÃO')
+        df = pd.read_excel(rmanifest).drop_duplicates('PROTOCOLO')
         ranking = df['ASSUNTO'].value_counts().reset_index()
-        ranking_uo = ranking.loc[ranking['ÓRGÃO'] == uo]
-        ranking_uo = ranking_uo.drop(columns=['ÓRGÃO'])
-        ranking_uo = ranking_uo.rename(columns={'ASSUNTO': 'Demanda', 'count': 'Quantidade'})
-        ranking_uo.to_excel('Ranking por Assunto-CGM0942.xlsx')
-        return ranking_uo
+        ranking = ranking.rename(columns={'index': 'Demanda', 'ASSUNTO': 'Quantidade'})
+        
+        if uo:
+            ranking_orgao = df[df['ÓRGÃO'] == uo]['ASSUNTO'].value_counts().reset_index()
+            ranking_orgao = ranking_orgao.rename(columns={'index': 'Demanda', 'ASSUNTO': 'Quantidade'})
+            
+            return {
+                "Ranking de assuntos mais demandados": ranking.to_dict(orient="records"),
+                "Ranking de assuntos mais demandados para o órgão especificado": ranking_orgao.to_dict(orient="records")
+            }
+        else:
+            return {"Ranking de assuntos mais demandados": ranking.to_dict(orient="records")}
+    
     except Exception as e:
         return {"error": f"Erro na função ranking_assunto: {str(e)}"}
+
 
