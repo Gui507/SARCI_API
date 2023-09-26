@@ -271,3 +271,30 @@ def ranking():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/transparencia/pedidos', methods=['POST'])
+@jwt_required()
+def pedidos():
+    try:
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        orgao_desejado = request.form.get('orgao')
+        
+        if not orgao_desejado:
+            return jsonify(f'Por favor, informe uma unidade orçamentária')
+        
+        if not arquivo_valido:
+            return arquivo, 400
+
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
+
+        resultado = transparencia.pedidos(arquivo, uo=orgao_desejado)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return resultado
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

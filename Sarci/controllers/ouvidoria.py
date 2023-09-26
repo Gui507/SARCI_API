@@ -136,7 +136,7 @@ def ranking_assunto(rmanifest, uo=None):
             ranking_orgao = ranking_orgao.rename(columns={'index': 'Demanda', 'ASSUNTO': 'Quantidade'})
             
             return {
-                "Ranking de assuntos mais demandados": ranking.to_dict(orient="records"),
+                #"Ranking de assuntos mais demandados": ranking.to_dict(orient="records"),
                 "Ranking de assuntos mais demandados para o órgão especificado": ranking_orgao.to_dict(orient="records")
             }
         else:
