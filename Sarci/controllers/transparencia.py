@@ -14,7 +14,7 @@ def verificar(arq, colunas_obrigatorias, nome_do_arquivo, header=0):
         return False, f"Erro na leitura do arquivo {e}"
 
 
-def pedidos(rpos, uo = None):
+def pedidos(rpos, uo):
     verifica = verificar(rpos, colunas_obrigatorias=['Nº de Pedidos', 'Nº de pedidos dentro do prazo (20 dias)', 'Nº de pedidos fora do prazo (> 20 dias)', 'Tempo Médio de Resposta do Pedido ', 'Recurso de 1ª Instância', 'Recurso de 2ª Instância', 'Recurso de 3ª Instância'], nome_do_arquivo='Relatório Ranking Simplificado', header=4)
     if verifica is not True:
         return verifica
@@ -33,7 +33,7 @@ def pedidos(rpos, uo = None):
         return {"error": f"Erro na função pedidos: {str(e)}"}, None
 
 def ranking_assunto(rp, uo = None):
-    verifica = verificar(rp, colunas_obrigatorias=['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO'], nome_do_arquivo='Relatório de Manifestação')
+    verifica = verificar(rp, colunas_obrigatorias=['Orgão (SIC)', 'Situação\n(*)', 'Assunto'], nome_do_arquivo='Relatório de Pedidos', header=4)
     if verifica is not True:
         return verifica
 
@@ -46,20 +46,21 @@ def ranking_assunto(rp, uo = None):
         ranking['% Pedidos'] = (ranking['Quantidade'] / total) * 100
         ranking['% Pedidos'] = ranking['% Pedidos'].map('{:.2f}%'.format)
         #ranking.to_excel(f'{dir(rp)}Ranking Assunto - {uo}.xlsx',index=False)
-        ranking.to_excel('Ranking Assunto-CGM.xlsx')
+        #ranking.to_excel('Ranking Assunto-CGM.xlsx')
+        ranking = ranking.to_dict(orient='records')
         return ranking
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
    
 
 def inventario_base(pda):
-    verifica = verificar(pda, colunas_obrigatorias=['PROTOCOLO', 'ÓRGÃO', 'TIPO DE MANIFESTAÇÃO'], nome_do_arquivo='Relatório de Manifestação')
-    if verifica is not True:
-        return verifica
+    colunas_obrigatorias = ['Nome da base de dados', 'Descrição da Base', 'Periodicidade de atualizações']
+    nome_do_arquivo = 'Plano de Dados Abertos'
 
-    try:    
+    try:
         import docx
         pd.set_option('display.max_colwidth', None)
+
         # Abrir o arquivo do Word
         documento = docx.Document(pda)
 
@@ -106,11 +107,18 @@ def inventario_base(pda):
         # Remove a primeira linha do DataFrame
         df_util = df_util.iloc[1:]
 
+        # Verificar se todas as colunas obrigatórias estão presentes
+        for coluna_obrigatoria in colunas_obrigatorias:
+            if coluna_obrigatoria not in df_util.columns:
+                return {"error": f"Por favor, importe {nome_do_arquivo}. As colunas obrigatórias estão ausentes."}, None
+
         # Resultado
         padroes = ['^Nome', '^Descrição', '^Unidade', '^Periodicidade']
         col_selecionadas = df_util.filter(regex='|'.join(padroes), axis=1)
-        #col_selecionadas.to_excel(f'{dir(pda)}Invetário de Base de Dados - IPEM.xlsx')
-        col_selecionadas.to_excel('Inventario de base de dados-CGM.xlsx')
+        # col_selecionadas.to_excel(f'{dir(pda)}Inventário de Base de Dados - IPEM.xlsx')
+        # col_selecionadas.to_excel('Inventário de base de dados-CGM.xlsx')
+        col_selecionadas = col_selecionadas.to_dict(orient='records')
         return col_selecionadas
     except Exception as e:
-        return {"error": f"Erro na função dea: {str(e)}"}, None
+        return {"error": f"Erro na função inventario_base: {str(e)}"}, None
+

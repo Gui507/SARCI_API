@@ -28,6 +28,7 @@ def login():
         
         # Cria um cursor para executar comandos SQL
         cursor = conexao.cursor()
+
         
         # Executa o comando SQL
         cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s',(username, password))
@@ -220,6 +221,7 @@ def respondidas():
   except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/ouvidoria/tempo-medio', methods=['POST'])
 @jwt_required()
 def tempo_medio():
@@ -244,6 +246,7 @@ def tempo_medio():
 
   except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/ouvidoria/ranking-assunto', methods=['POST'])
 @jwt_required()
@@ -298,3 +301,57 @@ def pedidos():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/transparencia/ranking-assunto', methods=['POST'])
+@jwt_required()
+def ranking_assunto():
+    try:
+        extensoes_permitidas = ['xlsx', 'csv', 'xls']
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        orgao_desejado = request.form.get('orgao')
+
+        if not arquivo_valido:
+            return arquivo, 400
+        
+        if not orgao_desejado:
+            return jsonify(f'Por favor, informe uma unidade orçamentária')
+        
+
+        if orgao_desejado:
+            orgao_desejado = orgao_desejado.upper()
+
+        resultado = transparencia.ranking_assunto(arquivo, uo=orgao_desejado)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return resultado
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+''' PARAMOS AQUI!!!
+
+@app.route("/transparencia/inventario-base", methods=['POST'])
+@jwt_required
+def inventario_base():
+    try:
+        extensoes_permitidas = ['docx']
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+        
+        if not arquivo_valido:
+            return arquivo, 400
+
+        resultado = transparencia.inventario_base(arquivo)
+
+        if 'error' in resultado:
+            return jsonify(resultado), 400
+
+        # Converta o resultado em JSON
+        return resultado
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+'''
