@@ -1,0 +1,240 @@
+body{
+    background-color: #f8f8fa
+  }
+        /* Estilos para o menu lateral */
+        .menu-lateral {
+            width: 250px; /* Largura do menu */
+            height: 100%; /* Altura do menu (ajustada à altura da tela) */
+            position: fixed; /* Mantém o menu fixo na tela enquanto rola */
+            top: 0;
+            left: 0;
+            background-color: #16B4EA; /* Cor de fundo do menu */
+            color: white; /* Cor do texto no menu */
+            padding-top: 20px; /* Espaçamento superior */
+            
+        }
+
+        /* Estilos para os itens do menu */
+        .menu-item {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        /* Estilo para destacar o item selecionado */
+        .menu-item:hover {
+            background-color: #FFCB06;
+            color: white;
+            
+        }
+
+        /* Estilos para o conteúdo principal */
+        .conteudo {
+            margin-left: 250px; /* Deixa espaço para o menu */
+            padding: 20px;
+        }
+  
+        /* Estilos personalizados para o menu lateral */
+        .sidebar {
+            height: 100%;
+            width: 20%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #16B4EA;
+            padding-top: 20px;
+            border-right: 1px solid #57757f;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            padding: 10px;
+            background: #16B4EA;
+        }
+
+        .sidebar a {
+            text-decoration: none;
+            color: white;
+            display: block;
+            padding: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            font-family: "Helvetica Neue", sans-serif;
+        }
+
+        .sidebar a:hover {
+            background: #FFCB06;
+        }
+  
+.content {
+  border: 0 solid #dee2e6;
+  background-color: #f5f5f5;
+  border-radius: 0.25rem;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+  width: 80%;
+  height: 90%;
+  margin: 0 auto;
+  display: flex;
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-40%);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+ .card-info {
+  border: 1 solid #dee2e6;
+  background-color: #16B4EA;
+  border-radius: 2rem;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 40%;
+  height: 30%;
+  margin: 0 auto;
+  display: flex;
+  position: absolute;
+  top: 20%;
+  left: 28%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  /* Alinhar verticalmente */
+  align-items: auto;
+  /* Centralizar horizontalmente */
+  justify-content: flex-start;
+  /* Alinhar no topo */
+}
+
+.card-sarci {
+  width: 300px;
+  /* Largura e altura iguais para criar um círculo */
+  height: 300px;
+  background-color: #3498db;
+  /* Cor de fundo do card */
+  border-radius: 50%;
+  /* Bordas arredondadas para criar um círculo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: normal;
+  flex-direction: column;
+  color: #000000;
+  /* Cor do texto dentro do card */
+  font-size: 30px;
+  /* Tamanho da fonte do texto */
+  margin-top: -2em;
+  left: 600%;
+  transform: translateX(250%);
+}
+
+.bem-vindo {
+  font-family: 'Palanquin', sans-serif;
+  font-family: 'Palanquin Dark', sans-serif;
+  color: #000000;
+  font-size: 2.2rem;
+  transform: translateX(25%);
+  margin-top: 2%;
+
+}
+
+.h2,
+.h3 {
+  white-space: normal;
+  margin: 0;
+  font-family: "inter", sans-serif;
+  font-weight: bold;
+}
+
+.h2 {
+  margin-bottom: -0.2em;
+  /* Adiciona espaço entre h2 e h3 */
+  font-size: 4rem;
+}
+
+.h3 {
+  font-size: 100%;
+}
+
+.colored-word {
+  color: white;
+  /* Cor que você deseja aplicar à palavra específica */
+}
+
+.info {
+  font-family: 'Palanquin', sans-serif;
+  color: #000000;
+  font-size: 1.7rem;
+  display: flex;
+  align-items: center;
+}
+
+.card-imagem {
+  width: 200px;
+  /* Largura e altura iguais para criar um círculo */
+  height: 200px;
+  background-color: #3498db;
+  /* Cor de fundo do card */
+  border-radius: 50%;
+  /* Bordas arredondadas para criar um círculo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a0a0a;
+  /* Cor do texto dentro do card */
+  font-size: 30px;
+  /* Tamanho da fonte do texto */
+  margin-top: -2em;
+  
+}
+
+.imagem {
+  width: 60%;
+  /* Largura desejada para a imagem */
+  height: 60%;
+  /* Altura desejada para a imagem */
+  transform: translateX(10%);
+}
+
+.button {
+  border: 1 solid #dee2e6;
+  background-color: #F37500;
+  border-radius: 2rem;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 9%;
+  height: 5%;
+  margin: 0 auto;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  left: 40%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  /* Alinhar verticalmente */
+  align-items: auto;
+  /* Centralizar horizontalmente */
+  justify-content: flex-start;
+  /* Alinhar no topo */
+}
+
+.seta {
+  width: 40%;
+  transform: translateX(65%);
+  margin-top: -10%;
+}
+
+.button ul {
+  list-style-type: none;
+  padding: 0;
+}
