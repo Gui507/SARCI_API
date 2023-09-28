@@ -123,7 +123,7 @@ def dea():
         return a  # Retorne o JSON como resposta
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota dea": str(e)}), 500
    
 
 @app.route('/despezas', methods = ['POST'])
@@ -141,7 +141,7 @@ def despezas_route():
         return a  # Retorne o JSON como resposta
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota despezas": str(e)}), 500
 
 
 @app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
@@ -167,7 +167,7 @@ def total_manifest():
         return jsonify(resultado)
 
    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota total-manifest": str(e)}), 500
    
 
 @app.route('/ouvidoria/total-tipos', methods=['POST'])
@@ -193,7 +193,7 @@ def contagem():
         return jsonify(resultado)
 
   except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota total-tipos": str(e)}), 500
     
 
 @app.route('/ouvidoria/total-respondidas', methods=['POST'])
@@ -219,7 +219,7 @@ def respondidas():
         return jsonify(resultado)
 
   except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota total-respondidas": str(e)}), 500
 
 
 @app.route('/ouvidoria/tempo-medio', methods=['POST'])
@@ -245,7 +245,7 @@ def tempo_medio():
         return jsonify(resultado)
 
   except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota ouvidoria/tempo-medio": str(e)}), 500
 
 
 @app.route('/ouvidoria/ranking-assunto', methods=['POST'])
@@ -271,7 +271,7 @@ def ranking():
         return jsonify(resultado)
 
   except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota ouvidoria/ranking-assunto": str(e)}), 500
 
 
 @app.route('/transparencia/pedidos', methods=['POST'])
@@ -300,58 +300,37 @@ def pedidos():
         return resultado
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error na rota tranparencia/pedidos": str(e)}), 500
     
-
-@app.route('/transparencia/ranking-assunto', methods=['POST'])
-@jwt_required()
-def ranking_assunto():
-    try:
-        extensoes_permitidas = ['xlsx', 'csv', 'xls']
-        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
-        orgao_desejado = request.form.get('orgao')
-
-        if not arquivo_valido:
-            return arquivo, 400
-        
-        if not orgao_desejado:
-            return jsonify(f'Por favor, informe uma unidade orçamentária')
-        
-
-        if orgao_desejado:
-            orgao_desejado = orgao_desejado.upper()
-
-        resultado = transparencia.ranking_assunto(arquivo, uo=orgao_desejado)
-
-        if 'error' in resultado:
-            return jsonify(resultado), 400
-
-        # Converta o resultado em JSON
-        return resultado
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-''' PARAMOS AQUI!!!
+# PARAMOS AQUI!!!
+''' Esta retornando o seginte erro:
+error: No module named exceptions
+'''
 
 @app.route("/transparencia/inventario-base", methods=['POST'])
-@jwt_required
+@jwt_required()
 def inventario_base():
     try:
-        extensoes_permitidas = ['docx']
+        extensoes_permitidas = ['docx', 'doc']
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         
         if not arquivo_valido:
             return arquivo, 400
 
-        resultado = transparencia.inventario_base(arquivo)
+        try:
+            resultado = transparencia.inventario_base(arquivo)
 
-        if 'error' in resultado:
-            return jsonify(resultado), 400
+            # Verifique se há um erro retornado pela função inventario_base
+            if 'error' in resultado:
+                return jsonify(resultado), 400
 
-        # Converta o resultado em JSON
-        return resultado
+            # Converta o resultado em JSON e retorne
+            return jsonify(resultado)
+
+        except Exception as e:
+            # Trate qualquer exceção que possa ocorrer durante a chamada a inventario_base
+            return jsonify({"error": str(e)}), 500
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-'''
+        # Trate qualquer exceção que possa ocorrer durante a verificação do arquivo
+        return jsonify({"error": str(e)}), 400

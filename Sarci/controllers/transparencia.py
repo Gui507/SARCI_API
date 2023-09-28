@@ -52,15 +52,14 @@ def ranking_assunto(rp, uo = None):
     except Exception as e:
         return {"error": f"Erro na função dea: {str(e)}"}, None
    
+# PARAMOS AQUI!!!
+''' Esta retornando o seginte erro:
+error: No module named exceptions
+'''
 
 def inventario_base(pda):
-    colunas_obrigatorias = ['Nome da base de dados', 'Descrição da Base', 'Periodicidade de atualizações']
-    nome_do_arquivo = 'Plano de Dados Abertos'
-
+    import docx
     try:
-        import docx
-        pd.set_option('display.max_colwidth', None)
-
         # Abrir o arquivo do Word
         documento = docx.Document(pda)
 
@@ -108,17 +107,17 @@ def inventario_base(pda):
         df_util = df_util.iloc[1:]
 
         # Verificar se todas as colunas obrigatórias estão presentes
+        colunas_obrigatorias = ['Nome da base de dados', 'Descrição da Base', 'Periodicidade de atualizações']
         for coluna_obrigatoria in colunas_obrigatorias:
             if coluna_obrigatoria not in df_util.columns:
-                return {"error": f"Por favor, importe {nome_do_arquivo}. As colunas obrigatórias estão ausentes."}, None
+                raise Exception(f"Por favor, importe o arquivo. A coluna obrigatória '{coluna_obrigatoria}' está ausente.")
 
         # Resultado
         padroes = ['^Nome', '^Descrição', '^Unidade', '^Periodicidade']
         col_selecionadas = df_util.filter(regex='|'.join(padroes), axis=1)
-        # col_selecionadas.to_excel(f'{dir(pda)}Inventário de Base de Dados - IPEM.xlsx')
-        # col_selecionadas.to_excel('Inventário de base de dados-CGM.xlsx')
         col_selecionadas = col_selecionadas.to_dict(orient='records')
         return col_selecionadas
-    except Exception as e:
-        return {"error": f"Erro na função inventario_base: {str(e)}"}, None
 
+    except Exception as e:
+        raise Exception(f"Erro na função inventario_base: {str(e)}")
+    
