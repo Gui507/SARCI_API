@@ -3,50 +3,49 @@ from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
 from datetime import timedelta
-from SARCI.controllers import contratos, ouvidoria, transparencia
+from Sarci.controllers import contratos, ouvidoria, transparencia
+import dotenv
 import json
-# import psycopg2
-# import dotenv
-# import os
+import psycopg2
+import os
+from psycopg2 import Error
+dotenv.load_dotenv()
 
-# dotenv.load_dotenv()
-'''
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
     return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET'])
 def login():
-    if request.method == 'POST':
-        data = request.get_json()
-    else:
-        data = request.args
-        username = data.get('username')
-        password = data.get('password')
-        # concetar ao banco de dados
+    username = request.args.get('username')
+    password = request.args.get('password')
+
+    try:
+        # Tente conectar ao banco de dados
         conexao = conectar_bd()
-        
-        # Cria um cursor para executar comandos SQL
         cursor = conexao.cursor()
 
-        
-        # Executa o comando SQL
-        cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s',(username, password))
+        # Executa o comando SQL com os valores fornecidos pela URL
+        cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s', (username, password))
         resultado = cursor.fetchone()
 
-        # Fecha o cursor e a conexão
+        if resultado is not None:
+            access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=60))
+            return jsonify({'access_token': access_token})
+        else:
+            return jsonify({'message': 'Credenciais inválidas'})
+
+    except Error as e:
+        # Se ocorrer um erro, imprima a mensagem de erro para depuração
+        print("Erro ao acessar o banco de dados:", e)
+        return jsonify({'message': 'Erro ao acessar o banco de dados'})
+
+    finally:
+        # Certifique-se de fechar o cursor e a conexão, mesmo em caso de erro
         cursor.close()
         conexao.close()
 
-        # Validação
-        if resultado is not None:
-            access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=20))
-            return jsonify({'access_token': access_token})
-        else:
-            return jsonify({'message': 'Invalid credentials'})
-'''
-
-# TESTE EM CASA (SEM BANCO DE DADOS)
+'''# TESTE EM CASA (SEM BANCO DE DADOS)
 db =[
 {
     'id': '1', 
@@ -61,6 +60,29 @@ db =[
     'password': '12345'
 }
 ]
+
+
+@app.route('/login', methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        data = request.get_json()
+    else:
+        data = request.args
+        username = data.get('username')
+        password = data.get('password')
+        matching_user = None
+        for user in db:
+            if user['username'] == username and user['password'] == password:
+                matching_user = user
+                break
+
+        if matching_user:
+            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
+            return jsonify({'access_token': access_token})
+        else:
+            return jsonify({'message': 'Invalid credentials'})
+'''
+
 
 def verificar_arquivo(request, extensoes_permitidas):
     # Verificar se o arquivo foi enviado
@@ -85,27 +107,6 @@ def verificar_arquivo(request, extensoes_permitidas):
 @app.route('/', methods = ['GET'])
 def print():
     return 'TESTE'
-
-
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if request.method == 'POST':
-        data = request.get_json()
-    else:
-        data = request.args
-        username = data.get('username')
-        password = data.get('password')
-        matching_user = None
-        for user in db:
-            if user['username'] == username and user['password'] == password:
-                matching_user = user
-                break
-
-        if matching_user:
-            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
-            return jsonify({'access_token': access_token})
-        else:
-            return jsonify({'message': 'Invalid credentials'})
 
 
 @app.route('/dea', methods=['POST'])
