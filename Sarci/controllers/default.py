@@ -1,4 +1,4 @@
-from SARCI.config import app
+from Sarci.config import app
 from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 import pandas as pd
@@ -318,19 +318,15 @@ def inventario_base():
         if not arquivo_valido:
             return arquivo, 400
 
-        try:
-            resultado = transparencia.inventario_base(arquivo)
+        
+        resultado = transparencia.inventario_base(arquivo)
 
-            # Verifique se há um erro retornado pela função inventario_base
-            if 'error' in resultado:
-                return jsonify(resultado), 400
+        # Verifique se há um erro retornado pela função inventario_base
+        if 'error' in resultado:
+            return jsonify(resultado), 400
 
-            # Converta o resultado em JSON e retorne
-            return jsonify(resultado)
-
-        except Exception as e:
-            # Trate qualquer exceção que possa ocorrer durante a chamada a inventario_base
-            return jsonify({"error": str(e)}), 500
+        # Converta o resultado em JSON e retorne
+        return jsonify(resultado)
 
     except Exception as e:
         # Trate qualquer exceção que possa ocorrer durante a verificação do arquivo

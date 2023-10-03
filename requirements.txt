@@ -8,4 +8,4 @@ openpyxl==3.1.2
 xlrd==2.0.1
 tabula-py==2.7.0
 docx==0.2.4
-
+psycopg2==2.9.6

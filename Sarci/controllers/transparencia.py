@@ -59,65 +59,67 @@ error: No module named exceptions
 
 def inventario_base(pda):
     import docx
+    from flask import jsonify
     try:
-        # Abrir o arquivo do Word
-        documento = docx.Document(pda)
+        # Abre o arquivo do Word fornecido ('pda') usando a biblioteca 'docx'.
+        documento = docx.Domunet(pda)
 
-        # Criar uma lista para armazenar as tabelas
+        # Cria uma lista chamada 'tabelas' para armazenar as tabelas encontradas no documento.
         tabelas = []
 
-        # Variável para armazenar a tabela atual
+        # Cria uma lista vazia chamada 'tabela_atual' para armazenar a tabela atualmente processada.
         tabela_atual = []
 
-        # Percorrer as tabelas do documento
+        # Percorre as tabelas no documento do Word.
         for tabela in documento.tables:
-            # Verificar se é uma nova tabela
+            # Verifica se é uma nova tabela verificando o conteúdo da primeira célula da primeira linha.
             if tabela.rows[0].cells[0].text.strip() != '':
-                # Verificar se existe tabela anterior
+                # Se já tiver uma 'tabela_atual' (ou seja, estamos em uma nova tabela), adiciona a tabela anterior à lista 'tabelas'.
                 if tabela_atual:
-                    # Adicionar tabela anterior à lista de tabelas
                     tabelas.append(tabela_atual)
 
-                # Iniciar uma nova tabela
+                # Inicia uma nova tabela limpando 'tabela_atual'.
                 tabela_atual = []
 
-            # Percorrer as linhas da tabela
+            # Percorre as linhas da tabela.
             for row in tabela.rows:
-                # Criar uma lista para armazenar as células da linha
+                # Cria uma lista chamada 'celulas' para armazenar o texto de cada célula da linha.
                 celulas = []
 
-                # Percorrer as células da linha e adicionar o texto à lista
+                # Percorre as células da linha e adiciona o texto à lista 'celulas'.
                 for cell in row.cells:
                     celulas.append(cell.text.replace('\n', ''))
 
-                # Adicionar a lista de células à tabela atual
+                # Adiciona a lista de 'celulas' à 'tabela_atual'.
                 tabela_atual.append(celulas)
 
-        # Adicionar última tabela à lista de tabelas
+        # Após o loop, adiciona a última 'tabela_atual' à lista 'tabelas'.
         tabelas.append(tabela_atual)
 
-        # Converter as tabelas em DataFrames
+        # Converte as tabelas em DataFrames do Pandas.
         dataframes = [pd.DataFrame(tabela) for tabela in tabelas]
 
-        # Seleciona os elementos uteis da lista
+        # Seleciona o primeiro DataFrame (a primeira tabela) da lista.
         df_util = pd.DataFrame(dataframes[0])
+
+        # Define a primeira linha do DataFrame como cabeçalho de coluna.
         df_util.columns = df_util.iloc[0]
 
-        # Remove a primeira linha do DataFrame
+        # Remove a primeira linha do DataFrame, pois já foi usada como cabeçalho.
         df_util = df_util.iloc[1:]
 
-        # Verificar se todas as colunas obrigatórias estão presentes
-        colunas_obrigatorias = ['Nome da base de dados', 'Descrição da Base', 'Periodicidade de atualizações']
-        for coluna_obrigatoria in colunas_obrigatorias:
-            if coluna_obrigatoria not in df_util.columns:
-                raise Exception(f"Por favor, importe o arquivo. A coluna obrigatória '{coluna_obrigatoria}' está ausente.")
-
-        # Resultado
+        # Define um padrão para as colunas desejadas.
         padroes = ['^Nome', '^Descrição', '^Unidade', '^Periodicidade']
+
+        # Filtra as colunas do DataFrame com base nos padrões.
         col_selecionadas = df_util.filter(regex='|'.join(padroes), axis=1)
-        col_selecionadas = col_selecionadas.to_dict(orient='records')
-        return col_selecionadas
+
+        # Converte o DataFrame resultante em um dicionário de registros.
+        resultado_json = col_selecionadas.to_dict(orient='records')
+
+        # Retorna o resultado como uma resposta JSON usando a função 'jsonify'.
+        return jsonify(resultado_json)
 
     except Exception as e:
-        raise Exception(f"Erro na função inventario_base: {str(e)}")
-    
+        # Se ocorrer um erro, retorna uma resposta JSON com uma mensagem de erro e um código de status 500 (erro interno do servidor).
+        return jsonify({"error": f"Erro na função processar_inventario_base: {str(e)}"}), 500
