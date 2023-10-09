@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def verificar(arq, colunas_obrigatorias, nome_do_arquivo, header=0):
     try:
         df = pd.read_excel(arq, header=header)
@@ -122,4 +123,4 @@ def inventario_base(pda):
 
     except Exception as e:
         # Se ocorrer um erro, retorna uma resposta JSON com uma mensagem de erro e um código de status 500 (erro interno do servidor).
-        return jsonify({"error": f"Erro na função processar_inventario_base: {str(e)}"}), 500
+        return {"error": f"Erro na função processar_inventario_base: {str(e)}"}, 500

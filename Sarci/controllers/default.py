@@ -11,6 +11,7 @@ import os
 from psycopg2 import Error
 dotenv.load_dotenv()
 
+'''
 # TESTE NA CGM (COM BANCO DE DADOS)
 def conectar_bd():
     return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
@@ -44,8 +45,9 @@ def login():
         # Certifique-se de fechar o cursor e a conexão, mesmo em caso de erro
         cursor.close()
         conexao.close()
+'''
 
-'''# TESTE EM CASA (SEM BANCO DE DADOS)
+# TESTE EM CASA (SEM BANCO DE DADOS)
 db =[
 {
     'id': '1', 
@@ -77,11 +79,11 @@ def login():
                 break
 
         if matching_user:
-            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
+            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=120))
             return jsonify({'access_token': access_token})
         else:
             return jsonify({'message': 'Invalid credentials'})
-'''
+
 
 
 def verificar_arquivo(request, extensoes_permitidas):
