@@ -16,6 +16,6 @@ app.debug =True
 app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 jwt = JWTManager(app)
 
+from SARCI.controllers import default
 
-from Sarci.controllers import default
 
