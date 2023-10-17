@@ -14,7 +14,7 @@ def dir(arq):
 
 def almoxerifado(palmo): #palmo = planilha referente ao almoxerifado
     import getpass
-    usuario = getpass.getuser()
+    #usuario = getpass.getuser()
 
     # ler tabela(s)
     todos_pdfs = [] #cria uma lista vazia onde será armazenados os caminhos relativos

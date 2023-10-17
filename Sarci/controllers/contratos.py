@@ -1,18 +1,11 @@
 import pandas as pd
 import datetime
 
-def verificar(arq, colunas_obrigatorias, nome_do_arquivo, header=0):
-    try:
-        df = pd.read_excel(arq, header=header)
-        colunas_arquivo = df.columns.tolist()
+def dir(arq):
+    "Armazena o diretório do arquivo"
+    d = arq.rfind('/'or '\\')
+    return (arq[:d+1])
 
-        for coluna in colunas_obrigatorias:
-            if coluna not in colunas_arquivo:
-                return f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
-            else:
-                return True
-    except Exception as e:
-        return False, f"Erro na leitura do arquivo {e}"
 
 def contratos(rcs, PMaster, Padi, n=10,):
     """
@@ -22,10 +15,6 @@ def contratos(rcs, PMaster, Padi, n=10,):
     PMaster = É variável onde armazenamos a informação do Relatório Contrato Sintético.\n
     Padi = É a variável onde armazenamos a informação do Relatório dos Aditivos atualizados.\n
     """
-    verifica = verificar(rcs, ['Coluna1', 'Coluna2'], 'Nome do Arquivo')
-    if verifica is not True:
-        return verifica  # Retorna mensagem de erro se a verificação falhar
-
     '''Variáveis'''
     PMaster['Cont. Inst.'] = PMaster['Cont. Inst.'].astype(str)
     PMaster['Exercício'] = PMaster['Exercício'].astype(str)
@@ -40,6 +29,7 @@ def contratos(rcs, PMaster, Padi, n=10,):
     PMaster['Dt. Início'] = PMaster['Dt. Início'].astype(str)
     PMaster['Dt. Fim'] = PMaster['Dt. Fim'].astype(str)
     PMaster['Vigência'] = PMaster['Dt. Início'].str.cat(PMaster['Dt. Fim'], sep='----')
+
     uo = PMaster['Sigla'].unique() 
     if len(uo) > 1:
        uo = str(input(f'Esolha a U.O\n{uo}')).strip().upper()
@@ -52,7 +42,7 @@ def contratos(rcs, PMaster, Padi, n=10,):
     PMaster = PMaster.merge(Padi, on=['Nº GRPFOR', 'U.O.'], how='left')
     PMaster['Valor'] = PMaster['Valor'].fillna(0)
     PMaster['Vlr. Contrato Atualizado'] = PMaster['Vlr. Contrato'] + PMaster['Vlr. Adit. Acréscimo'] - PMaster['Vlr. Adit. Redução']- PMaster['Valor']
- 
+    
     '''Empenhado no ano'''
     ano = datetime.date.today().year - 1 #SELECIONA O ANO ATUAL MENOS 1
     empenhado = PMaster.loc[(PMaster['Dt. Emp.'].dt.year == ano) & (PMaster['Situação.1'] != 'Anulada') & (PMaster['Cod. Assu.'] != 6)] # Filtra o DT.EMP para achar apenas os contratos do orgão de 2022 e os valores que sejam diferentes de ANULADO'
@@ -74,45 +64,32 @@ def contratos(rcs, PMaster, Padi, n=10,):
     result['Execução'] = round((result['Valor Parcela_y'] / result['Vlr. Contrato Atualizado']) * 100, 2) # Cálculo da Execução
     result.rename(columns={'Contrato_Inst':'Nº Contrato','Valor Parcela_y': 'Empenhado até o ano', 'Valor Parcela_x': 'Empenhado no ano', '   Credor': 'Contratado', 'Descrição Assunto': 'Objeto'}, inplace= True) #Renomeação de colunas
     result = result[['Nº GRPFOR','Nº Contrato','Contratado', 'Objeto', 'Vigência', 'Vlr. Contrato Atualizado', 'Empenhado até o ano', 'Execução', 'Empenhado no ano']].head(n)
-    if result.empty:
-        return (f'{uo} não possui contratos de gestão.')
-    else:
-        result.to_excel('Contratos de Gestão-CGM.xlsx')
-        #result.to_excel(f'{dir(rcs)} - Contratos de Gestão.xlsx',index=False)
-        return result
+    #result.to_excel(f'{dir(rcs)}Contratos.xlsx',index=False)
+    result.to_excel('Contratos-CGM.xlsx')
+    return result.loc
 
 
-def dea(arquivo):
+def dea(re, P1):
     '''
     Gera um filtro que pega os valores com DEA e os valores sem DEA e os soma.
     O cálculo da execução de DEA é a divisão da soma de DEA pelo valor total.\n
-    OBS: Para saber se um contrato tem DEA, a coluna 'Despes' da Planilha armazenada na variável arquivo tem que terminar com 92.\n
-    arquivo = Relatorio de Destaques e Empenhos Analíticos\n
+    OBS: Para saber se um contrato tem DEA, a coluna 'Despes' da Planilha armazenada na variável P1 tem que terminar com 92.\n
+    re = Relatório de Empenho, armazena o caminho onde a planilha gerada pelo código será gerada.\n
+    P1 = Armazena a informação da planilha que usamos para aferir o DEA\n
     '''
-    verifica = verificar(arquivo, ['Despes', 'Vlr. Emp. Líquido'], 'Relatório de Destaques e Empenhos Analítico', header= 3)
-    if verifica is not True:
-        return verifica  # Retorna mensagem de erro se a verificação falhar
+    # Filtra linhas onde o valor de 'Despes' termina em '92'
+    mask = P1['Despes'].astype(str).str.endswith('92')
 
-    try:
-        P1 = pd.read_excel(arquivo, header=3)
-        colunas_obrigatorias = ['Despes', 'Vlr. Emp. Líquido']
-        colunas_arquivo = P1.columns.tolist()
-        nome_do_arquivo='Relatório de Destaques e Empenhos Analítico'
-        
-        for coluna in colunas_obrigatorias:
-            if coluna not in colunas_arquivo:
-                return f'Arquivo errado errado, por favor importe o {nome_do_arquivo} '
-                break
+    # Soma os valores correspondentes
+    soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
+    soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
 
-        mask = P1['Despes'].astype(str).str.endswith('92')
-        soma_dea = P1.loc[mask, 'Vlr. Emp. Líquido'].sum()
-        soma_sem_dea = P1.loc[~mask, 'Vlr. Emp. Líquido'].sum()
-        valor_total = soma_dea + soma_sem_dea
-        execucao_dea = round((soma_dea / valor_total) * 100, 2)
-        despezas_de_execicios_anteriores = pd.DataFrame([soma_dea, valor_total, execucao_dea], index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
-        return despezas_de_execicios_anteriores.to_json(orient='columns')
-    except Exception as e:
-        return {"error": f"Erro na função dea: {str(e)}"}, None
+    valor_total = soma_dea + soma_sem_dea
+    execucao_dea = round((soma_dea / valor_total) * 100, 2)
+    despezas_de_execicios_anteriores = pd.DataFrame([soma_dea,valor_total,execucao_dea],index=['Valor empenhado com DEA', 'Valor total empenhado', 'Índice de Execução de DEA'])
+    #despezas_de_execicios_anteriores.to_excel(f'{dir(re)}DEA.xlsx', index=True)
+    despezas_de_execicios_anteriores.to_excel('DEA-CGM.xlsx')
+    return(despezas_de_execicios_anteriores)
 
 
 def gestão(rcs, PMaster, Padi, n=10):
@@ -180,23 +157,16 @@ def gestão(rcs, PMaster, Padi, n=10):
         return result
 
 
-def despezas(arquivo):
+def despesas(rdesp, P4):
     '''
     Despesas por programa e comparação com o contrato.\n
     Utilizando a planilha P4 para o cálculo do percentual do que foi empenhado no mês com o saldo da dotação atual.\n
-    arquivo = Relatório Acompanhamento e Execução Orçamentaria\n
+    rdesp = relatório de despesa\n
+    p4 = planilha usada para a obtenãdo dos dados para o cálculo da porcentagem.
     '''
-    verifica = verificar(arquivo, ['Descrição do Programa', 'Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês'], 'Relatório Acompanhamento e Execução Orçamentaria', header=1)
-    if verifica is not True:
-        return verifica  # Retorna mensagem de erro se a verificação falhar
-
-    try: 
-        P4 = pd.read_excel(arquivo, header=1)
-        TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
-        TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês']/TabDespesadf['Sd Dot.Atual']) * 100, 2)
-        TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
-        #TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
-        #TabDespesadf.to_excel('Despesas-CGM.xlsx')
-        return TabDespesadf.to_json(orient='columns')
-    except Exception as e:
-         return f"Erro na função despezas: {str(e)}", 400
+    TabDespesadf = P4.groupby(['Descrição do Programa'], as_index=False)[['Sd Dot.Atual', 'Emp. No Mês', 'Liq. No Mês']].sum()
+    TabDespesadf['Execução'] = round((TabDespesadf['Emp. No Mês']/TabDespesadf['Sd Dot.Atual']) * 100, 2)
+    TabDespesadf.rename(columns={'Descrição do Programa': 'Programa', 'Emp. No Mês': 'Empenhado No Ano', 'Liq. No Mês': 'Liquidado No Ano'}, inplace = True)
+    #TabDespesadf.to_excel(f'{dir(rdesp)}Despesas.xlsx', index=False)
+    TabDespesadf.to_excel('Despesas-CGM.xlsx')
+    return TabDespesadf
