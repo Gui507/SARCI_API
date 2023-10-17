@@ -28,7 +28,6 @@ def login():
         
         # Cria um cursor para executar comandos SQL
         cursor = conexao.cursor()
-
         
         # Executa o comando SQL
         cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s',(username, password))
@@ -327,3 +326,5 @@ def inventario_base():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
