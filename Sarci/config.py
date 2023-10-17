@@ -17,5 +17,5 @@ app.config['JWT_SECRET_KEY'] = 'my_secret_key'
 jwt = JWTManager(app)
 
 
-from Sarci.controllers import default
+from SARCI.controllers import default
 
