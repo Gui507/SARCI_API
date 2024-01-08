@@ -323,7 +323,7 @@ def inventario_base():
 
         # Converta o resultado em JSON e retorne
         return jsonify(resultado),400
-
+    
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

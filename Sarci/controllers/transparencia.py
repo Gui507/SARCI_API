@@ -58,7 +58,8 @@ error: No module named exceptions
 '''
 
 def inventario_base(pda):
-    import docx
+    #import docx
+
     #from flask import jsonify
     try:
         # Abre o arquivo do Word fornecido ('pda') usando a biblioteca 'docx'.
