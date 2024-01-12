@@ -1,9 +1,9 @@
-from SARCI.config import app
+from Sarci.config import app
 from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
 #import pandas as pd
 from datetime import timedelta
-from SARCI.controllers import contratos, ouvidoria, transparencia
+from Sarci.controllers import contratos, ouvidoria, transparencia
 #import json
 # import psycopg2
 # import dotenv
