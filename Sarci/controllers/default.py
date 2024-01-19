@@ -61,25 +61,22 @@ db =[
 ]
 
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET'])
 def login():
-    if request.method == 'POST':
-        data = request.get_json()
-    else:
-        data = request.args
-        username = data.get('username')
-        password = data.get('password')
-        matching_user = None
-        for user in db:
-            if user['username'] == username and user['password'] == password:
-                matching_user = user
-                break
+    data = request.args
+    username = data.get('username')
+    password = data.get('password')
+    matching_user = None
+    for user in db:
+        if user['username'] == username and user['password'] == password:
+            matching_user = user
+            break
 
-        if matching_user:
-            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
-            return jsonify({'access_token': access_token})
-        else:
-            return jsonify({'message': 'Invalid credentials'})
+    if matching_user:
+        access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
+        return jsonify({'access_token': access_token})
+    else:
+        return jsonify({'message': 'Invalid credentials'})
 
 
 
@@ -108,7 +105,7 @@ def print():
     return 'TESTE'
 
 
-@app.route('/dea', methods=['POST'])
+@app.route('/dea', methods=['GET'])
 @jwt_required()
 def dea():
     try:
@@ -126,7 +123,7 @@ def dea():
         return jsonify({"error na rota dea": str(e)}), 500
    
 
-@app.route('/despezas', methods = ['POST'])
+@app.route('/despezas', methods = ['GET'])
 @jwt_required()
 def despezas():
     try:
@@ -144,7 +141,7 @@ def despezas():
         return jsonify({"error na rota despezas": str(e)}), 500
 
 
-@app.route('/ouvidoria/total-de-manifestacoes', methods=['POST'])
+@app.route('/ouvidoria/total-de-manifestacoes', methods=['GET'])
 @jwt_required()
 def total_manifest():
    try:
@@ -170,7 +167,7 @@ def total_manifest():
         return jsonify({"error na rota total-manifest": str(e)}), 500
    
 
-@app.route('/ouvidoria/total-tipos', methods=['POST'])
+@app.route('/ouvidoria/total-tipos', methods=['GET'])
 @jwt_required()
 def contagem():
   try:
@@ -196,7 +193,7 @@ def contagem():
         return jsonify({"error na rota total-tipos": str(e)}), 500
     
 
-@app.route('/ouvidoria/total-respondidas', methods=['POST'])
+@app.route('/ouvidoria/total-respondidas', methods=['GET'])
 @jwt_required()
 def respondidas():
   try:
@@ -222,7 +219,7 @@ def respondidas():
         return jsonify({"error na rota total-respondidas": str(e)}), 500
 
 
-@app.route('/ouvidoria/tempo-medio', methods=['POST'])
+@app.route('/ouvidoria/tempo-medio', methods=['GET'])
 @jwt_required()
 def tempo_medio():
   try:
@@ -248,7 +245,7 @@ def tempo_medio():
         return jsonify({"error na rota ouvidoria/tempo-medio": str(e)}), 500
 
 
-@app.route('/ouvidoria/ranking-assunto', methods=['POST'])
+@app.route('/ouvidoria/ranking-assunto', methods=['GET'])
 @jwt_required()
 def ranking():
   try:
@@ -274,7 +271,7 @@ def ranking():
         return jsonify({"error na rota ouvidoria/ranking-assunto": str(e)}), 500
 
 
-@app.route('/transparencia/pedidos', methods=['POST'])
+@app.route('/transparencia/pedidos', methods=['GET'])
 @jwt_required()
 def pedidos():
     try:
@@ -304,7 +301,7 @@ def pedidos():
     
 
 
-@app.route("/transparencia/inventario-base", methods=['POST'])
+@app.route("/transparencia/inventario-base", methods=['GET'])
 @jwt_required()
 def inventario_base():
     try:
@@ -326,7 +323,7 @@ def inventario_base():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route("/patrimonio/almoxerifado", methods=['POST'])
+@app.route("/patrimonio/almoxerifado", methods=['GET'])
 @jwt_required()
 def almoxerifado():
     try:
@@ -349,7 +346,7 @@ def almoxerifado():
     
     
 
-@app.route("/patrimonio/bens-móveis", methods=['POST'])
+@app.route("/patrimonio/bens-móveis", methods=['GET'])
 @jwt_required()
 def bensmoveis():
     try:
@@ -371,7 +368,7 @@ def bensmoveis():
         return jsonify({"error": str(e)}), 500
     
 
-@app.route('/processar_contratos', methods=['POST'])
+@app.route('/processar_contratos', methods=['GET'])
 def processar_contratos():
     # Verificar se foram enviados dois arquivos
     if 'PMaster' not in request.files or 'Padi' not in request.files:
