@@ -1,0 +1,53 @@
+# .gitignore for Flask Python project
+
+# Byte-compiled / optimized / DLL files
+_pycache_/
+**/_pycache_/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+venv/
+env/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+MANIFEST
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDEs
+.idea/
+
+# .vscode folder (Visual Studio Code)
+.vscode/
+
+# SQLite database files
+*.sqlite
+*.sqlite3
+
+# Flask generated files
+instance/
+webapp.egg-info/
