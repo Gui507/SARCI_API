@@ -326,49 +326,49 @@ def inventario_base():
         return jsonify({"error": str(e)}), 500
     
 
-# @app.route("/patrimonio/almoxerifado", methods=['POST'])
-# @jwt_required()
-# def almoxerifado():
-#     try:
-#         extensoes_permitidas = ['pdf']
-#         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+@app.route("/patrimonio/almoxerifado", methods=['POST'])
+@jwt_required()
+def almoxerifado():
+    try:
+        extensoes_permitidas = ['pdf']
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
 
-#         if not arquivo_valido:
-#             return arquivo, 400
+        if not arquivo_valido:
+            return arquivo, 400
 
-#         resultado = patrimonio.almoxerifado(arquivo)
+        resultado = patrimonio.almoxerifado(arquivo)
         
-#         if 'error' in resultado:
-#             return jsonify(resultado), 400
+        if 'error' in resultado:
+            return jsonify(resultado), 400
 
-#         # Converta o resultado em JSON e retorne
-#         return resultado
+        # Converta o resultado em JSON e retorne
+        return resultado
 
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
     
 
-# @app.route("/patrimonio/bens-móveis", methods=['POST'])
-# @jwt_required()
-# def bensmoveis():
-#     try:
-#         extensoes_permitidas = ['pdf']
-#         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+@app.route("/patrimonio/bens-móveis", methods=['POST'])
+@jwt_required()
+def bensmoveis():
+    try:
+        extensoes_permitidas = ['pdf']
+        arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
 
-#         if not arquivo_valido:
-#             return arquivo, 400
+        if not arquivo_valido:
+            return arquivo, 400
 
-#         resultado = patrimonio.almoxerifado(arquivo)
+        resultado = patrimonio.almoxerifado(arquivo)
         
-#         if 'error' in resultado:
-#             return jsonify(resultado), 400
+        if 'error' in resultado:
+            return jsonify(resultado), 400
 
-#         # Converta o resultado em JSON e retorne
-#         return resultado
+        # Converta o resultado em JSON e retorne
+        return resultado
 
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 
 @app.route('/processar_contratos', methods=['POST'])
