@@ -1,49 +1,48 @@
 from Sarci.config import app
 from flask import request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
-#import pandas as pd
+import pandas as pd
 from datetime import timedelta
-from Sarci.controllers import contratos, ouvidoria, transparencia
-#import json
-# import psycopg2
+from Sarci.controllers import contratos, ouvidoria, transparencia, patrimonio
 # import dotenv
-# import os
-
+import json
+# import psycopg2
+import os
 # dotenv.load_dotenv()
-'''
+
 # TESTE NA CGM (COM BANCO DE DADOS)
-def conectar_bd():
-    return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
+# def conectar_bd():
+#     return psycopg2.connect(host=os.getenv('host'), database=os.getenv('database'), port=os.getenv('port'), user=os.getenv('user'), password=os.getenv('password'))
 
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if request.method == 'POST':
-        data = request.get_json()
-    else:
-        data = request.args
-        username = data.get('username')
-        password = data.get('password')
-        # concetar ao banco de dados
-        conexao = conectar_bd()
-        
-        # Cria um cursor para executar comandos SQL
-        cursor = conexao.cursor()
-        
-        # Executa o comando SQL
-        cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s',(username, password))
-        resultado = cursor.fetchone()
+# @app.route("/login", methods=['GET'])
+# def login():
+#     username = request.args.get('username')
+#     password = request.args.get('password')
 
-        # Fecha o cursor e a conexão
-        cursor.close()
-        conexao.close()
+#     try:
+#         # Tente conectar ao banco de dados
+#         conexao = conectar_bd()
+#         cursor = conexao.cursor()
 
-        # Validação
-        if resultado is not None:
-            access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=20))
-            return jsonify({'access_token': access_token})
-        else:
-            return jsonify({'message': 'Invalid credentials'})
-'''
+#         # Executa o comando SQL com os valores fornecidos pela URL
+#         cursor.execute('SELECT * FROM usuarios WHERE username = %s AND senha = %s', (username, password))
+#         resultado = cursor.fetchone()
+
+#         if resultado is not None:
+#             access_token = create_access_token(identity=resultado[0], expires_delta=timedelta(minutes=60))
+#             return jsonify({'access_token': access_token})
+#         else:
+#             return jsonify({'message': 'Credenciais inválidas'})
+
+#     except Error as e:
+#         # Se ocorrer um erro, imprima a mensagem de erro para depuração
+#         print("Erro ao acessar o banco de dados:", e)
+#         return jsonify({'message': 'Erro ao acessar o banco de dados'})
+
+#     finally:
+#         # Certifique-se de fechar o cursor e a conexão, mesmo em caso de erro
+#         cursor.close()
+#         conexao.close()
 
 # TESTE EM CASA (SEM BANCO DE DADOS)
 db =[
@@ -60,6 +59,29 @@ db =[
     'password': '12345'
 }
 ]
+
+
+@app.route('/login', methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        data = request.get_json()
+    else:
+        data = request.args
+        username = data.get('username')
+        password = data.get('password')
+        matching_user = None
+        for user in db:
+            if user['username'] == username and user['password'] == password:
+                matching_user = user
+                break
+
+        if matching_user:
+            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
+            return jsonify({'access_token': access_token})
+        else:
+            return jsonify({'message': 'Invalid credentials'})
+
+
 
 def verificar_arquivo(request, extensoes_permitidas):
     # Verificar se o arquivo foi enviado
@@ -86,27 +108,6 @@ def print():
     return 'TESTE'
 
 
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if request.method == 'POST':
-        data = request.get_json()
-    else:
-        data = request.args
-        username = data.get('username')
-        password = data.get('password')
-        matching_user = None
-        for user in db:
-            if user['username'] == username and user['password'] == password:
-                matching_user = user
-                break
-
-        if matching_user:
-            access_token = create_access_token(identity=matching_user['id'], expires_delta=timedelta(minutes=60))
-            return jsonify({'access_token': access_token})
-        else:
-            return jsonify({'message': 'Invalid credentials'})
-
-
 @app.route('/dea', methods=['POST'])
 @jwt_required()
 def dea():
@@ -127,17 +128,17 @@ def dea():
 
 @app.route('/despezas', methods = ['POST'])
 @jwt_required()
-def despezas_route():
+def despezas():
     try:
         extensoes_permitidas = ['xlsx', 'csv', 'xls']
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
         if not arquivo_valido:
             return arquivo, 400
 
-        a = contratos.despezas(arquivo)  # Chame a função despezas do seu arquivo contratos.py
+        a = contratos.despesas(arquivo)  # Chame a função despezas do seu arquivo contratos.py
           # Converta o resultado em JSON
 
-        return a  # Retorne o JSON como resposta
+        return jsonify(a)  # Retorne o JSON como resposta
 
     except Exception as e:
         return jsonify({"error na rota despezas": str(e)}), 500
@@ -301,10 +302,7 @@ def pedidos():
     except Exception as e:
         return jsonify({"error na rota tranparencia/pedidos": str(e)}), 500
     
-# PARAMOS AQUI!!!
-''' Esta retornando o seginte erro:
-error: No module named exceptions
-'''
+
 
 @app.route("/transparencia/inventario-base", methods=['POST'])
 @jwt_required()
@@ -314,7 +312,7 @@ def inventario_base():
         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
 
         if not arquivo_valido:
-            return jsonify({"error": "Arquivo inválido. Certifique-se de enviar um arquivo .docx ou .doc"}), 400
+            return arquivo, 400
 
         resultado = transparencia.inventario_base(arquivo)
         
@@ -323,8 +321,85 @@ def inventario_base():
 
         # Converta o resultado em JSON e retorne
         return jsonify(resultado),400
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+# @app.route("/patrimonio/almoxerifado", methods=['POST'])
+# @jwt_required()
+# def almoxerifado():
+#     try:
+#         extensoes_permitidas = ['pdf']
+#         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
 
+#         if not arquivo_valido:
+#             return arquivo, 400
+
+#         resultado = patrimonio.almoxerifado(arquivo)
+        
+#         if 'error' in resultado:
+#             return jsonify(resultado), 400
+
+#         # Converta o resultado em JSON e retorne
+#         return resultado
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+    
+
+# @app.route("/patrimonio/bens-móveis", methods=['POST'])
+# @jwt_required()
+# def bensmoveis():
+#     try:
+#         extensoes_permitidas = ['pdf']
+#         arquivo_valido, arquivo = verificar_arquivo(request, extensoes_permitidas)
+
+#         if not arquivo_valido:
+#             return arquivo, 400
+
+#         resultado = patrimonio.almoxerifado(arquivo)
+        
+#         if 'error' in resultado:
+#             return jsonify(resultado), 400
+
+#         # Converta o resultado em JSON e retorne
+#         return resultado
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/processar_contratos', methods=['POST'])
+def processar_contratos():
+    # Verificar se foram enviados dois arquivos
+    if 'PMaster' not in request.files or 'Padi' not in request.files:
+        return jsonify({"error": "Por favor, envie os dois arquivos PMaster e Padi."}), 400
+
+    PMaster_file = request.files['PMaster']
+    Padi_file = request.files['Padi']
+
+    # Verificar as extensões dos arquivos
+    if not PMaster_file.filename.endswith('.xls') or not Padi_file.filename.endswith('.csv'):
+        return jsonify({"error": "Os arquivos devem estar no formato CSV."}), 400
+
+    uou = request.form.get('UO')
+    # Carregar os arquivos em DataFrames
+    PMaster = pd.read_excel(PMaster_file, header=1)
+    Padi = pd.read_csv(Padi_file, encoding='iso8859-1', sep=';')
+
+    # Verificar se os DataFrames possuem as colunas esperadas (independente da ordem)
+    expected_columns_PMaster = ['Cont. Inst.', 'Exercício', 'Cont. Inst.', 'Dt. Início', 'Dt. Fim', 'Sigla'] # Lista completa de colunas esperadas
+    expected_columns_Padi = ['Valor', 'Nº Contrato']  # Lista completa de colunas esperadas
+
+    if not set(expected_columns_PMaster).issubset(PMaster.columns) or not set(expected_columns_Padi).issubset(Padi.columns):
+        return jsonify({"error": "Os arquivos não possuem todas as colunas esperadas."}), 400
+
+    # Chamar a função contratos com os DataFrames PMaster e Padi
+    result = contratos.contratos(PMaster, Padi, uou)
+
+    # Converter o resultado em JSON
+    # result_json = result.to_json(orient='records')
+
+    return jsonify({"result": result})

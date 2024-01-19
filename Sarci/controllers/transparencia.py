@@ -58,12 +58,11 @@ error: No module named exceptions
 '''
 
 def inventario_base(pda):
-    #import docx
-
-    #from flask import jsonify
+    import docx
+    from flask import jsonify
     try:
         # Abre o arquivo do Word fornecido ('pda') usando a biblioteca 'docx'.
-        documento = docx.Domunet(pda)
+        documento = docx.Document(pda)
 
         # Cria uma lista chamada 'tabelas' para armazenar as tabelas encontradas no documento.
         tabelas = []
@@ -119,8 +118,8 @@ def inventario_base(pda):
         resultado_json = col_selecionadas.to_dict(orient='records')
 
         # Retorna o resultado como uma resposta JSON usando a função 'jsonify'.
-        return resultado_json
+        return jsonify(resultado_json).get_data(as_text=True)
 
     except Exception as e:
         # Se ocorrer um erro, retorna uma resposta JSON com uma mensagem de erro e um código de status 500 (erro interno do servidor).
-        return {"error": f"Erro na função processar_inventario_base: {str(e)}"}, None
+        return jsonify({"error": f"Erro na função processar_inventario_base: {str(e)}"}), 500

@@ -144,5 +144,3 @@ def ranking_assunto(rmanifest, uo=None):
     
     except Exception as e:
         return {"error": f"Erro na função ranking_assunto: {str(e)}"}
-
-
