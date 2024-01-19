@@ -2,6 +2,7 @@
 
 # Byte-compiled / optimized / DLL files
 _pycache_/
+**/_pycache_/
 *.pyc
 *.pyo
 *.pyd
